@@ -1,0 +1,1174 @@
+<!DOCTYPE html>
+<html lang="es">
+
+<head>
+  <meta charset="UTF-8">
+
+  <meta
+    name="viewport"
+    content="width=device-width, initial-scale=1.0"
+  >
+
+  <title>Gestión de Recursos y Stock HU3</title>
+
+  <link rel="stylesheet" href="css/styles.css">
+
+  <!-- Estilos necesarios para las ventanas y mensajes -->
+  <style>
+    .mensaje-vacio {
+      display: none;
+      text-align: center;
+      padding: 30px;
+      font-size: 17px;
+      color: #666;
+    }
+
+    .modal-overlay {
+      display: none;
+      position: fixed;
+      inset: 0;
+      z-index: 1000;
+      padding: 20px;
+      background-color: rgba(0, 0, 0, 0.55);
+      align-items: center;
+      justify-content: center;
+    }
+
+    .modal-overlay.activo {
+      display: flex;
+    }
+
+    .modal-contenido {
+      position: relative;
+      width: 100%;
+      max-width: 520px;
+      max-height: 90vh;
+      overflow-y: auto;
+      padding: 30px;
+      border-radius: 15px;
+      background-color: white;
+      box-shadow: 0 15px 45px rgba(0, 0, 0, 0.25);
+      animation: aparecerModal 0.2s ease;
+      box-sizing: border-box;
+    }
+
+    @keyframes aparecerModal {
+      from {
+        opacity: 0;
+        transform: translateY(-20px);
+      }
+
+      to {
+        opacity: 1;
+        transform: translateY(0);
+      }
+    }
+
+    .modal-contenido h2 {
+      margin-top: 0;
+      margin-bottom: 24px;
+      color: #11163d;
+    }
+
+    .modal-cerrar {
+      position: absolute;
+      top: 10px;
+      right: 15px;
+      border: none;
+      background: transparent;
+      color: #555;
+      font-size: 30px;
+      cursor: pointer;
+    }
+
+    .modal-cerrar:hover {
+      color: #e74c3c;
+    }
+
+    .grupo-formulario {
+      display: flex;
+      flex-direction: column;
+      gap: 7px;
+      margin-bottom: 17px;
+    }
+
+    .grupo-formulario label {
+      font-weight: 600;
+      color: #222;
+    }
+
+    .grupo-formulario input,
+    .grupo-formulario select {
+      width: 100%;
+      padding: 11px 12px;
+      border: 1px solid #ccc;
+      border-radius: 7px;
+      font-size: 15px;
+      box-sizing: border-box;
+    }
+
+    .grupo-formulario input:focus,
+    .grupo-formulario select:focus {
+      border-color: #13a7c2;
+      outline: none;
+      box-shadow: 0 0 0 3px rgba(19, 167, 194, 0.15);
+    }
+
+    .acciones-modal {
+      display: flex;
+      justify-content: flex-end;
+      gap: 12px;
+      margin-top: 22px;
+    }
+
+    .btn-guardar,
+    .btn-cancelar {
+      padding: 10px 19px;
+      border: none;
+      border-radius: 7px;
+      cursor: pointer;
+      font-size: 14px;
+    }
+
+    .btn-guardar {
+      background-color: #13a7c2;
+      color: white;
+    }
+
+    .btn-guardar:hover {
+      background-color: #0d8da5;
+    }
+
+    .btn-guardar:disabled {
+      opacity: 0.65;
+      cursor: not-allowed;
+    }
+
+    .btn-cancelar {
+      background-color: #e8e8e8;
+      color: #333;
+    }
+
+    .detalle-fila {
+      display: grid;
+      grid-template-columns: 140px 1fr;
+      gap: 10px;
+      padding: 12px 0;
+      border-bottom: 1px solid #eee;
+    }
+
+    .detalle-fila:last-child {
+      border-bottom: none;
+    }
+
+    .mensaje-registro {
+      min-height: 20px;
+      margin-top: 16px;
+      text-align: center;
+      font-weight: 600;
+    }
+
+    .error-carga {
+      grid-column: 1 / -1;
+      padding: 30px;
+      text-align: center;
+      color: #c0392b;
+      background-color: #fdecea;
+      border-radius: 10px;
+    }
+
+    .cargando {
+      grid-column: 1 / -1;
+      padding: 30px;
+      text-align: center;
+      color: #555;
+    }
+
+    .btn-ver-detalle {
+      cursor: pointer;
+    }
+
+    @media (max-width: 600px) {
+      .modal-contenido {
+        padding: 25px 20px;
+      }
+
+      .detalle-fila {
+        grid-template-columns: 1fr;
+        gap: 4px;
+      }
+
+      .acciones-modal {
+        flex-direction: column;
+      }
+
+      .btn-guardar,
+      .btn-cancelar {
+        width: 100%;
+      }
+    }
+  </style>
+</head>
+
+<body>
+
+  <!-- Barra de navegación -->
+  <header class="navbar">
+    <div class="logo">💙 RedComunitaria</div>
+
+    <nav>
+      <a href="index.html">Inicio</a>
+      <a href="#">Ollas Comunes</a>
+      <a href="#">Donar</a>
+    </nav>
+
+    <a href="dashboard.html" class="btn-cerrar">
+      Volver
+    </a>
+  </header>
+
+
+  <!-- Presentación -->
+  <section class="hero">
+    <h1>Gestión de Recursos y Stock</h1>
+
+    <p>
+      Encuentra y apoya las ollas comunes de tu comunidad
+    </p>
+  </section>
+
+
+  <!-- Stock -->
+  <section class="stock">
+    <h2>Stock Actual</h2>
+
+    <div class="carrusel-stock">
+
+      <button
+        type="button"
+        class="btn-carrusel"
+        onclick="moverCarrusel(-1)"
+        aria-label="Mover carrusel a la izquierda"
+      >
+        &lt;
+      </button>
+
+      <div class="stock-contenedor" id="stockContenedor">
+
+        <div class="producto">
+          <img src="leche.jpeg" alt="Leche">
+
+          <div>
+            <h3>Leche</h3>
+            <span class="bajo">Bajo stock</span>
+            <p>Stock: 10 botellas</p>
+          </div>
+        </div>
+
+        <div class="producto">
+          <img src="azucar.jpeg" alt="Azúcar">
+
+          <div>
+            <h3>Azúcar</h3>
+            <span class="disponible">Disponible</span>
+            <p>Stock: 120 kg</p>
+          </div>
+        </div>
+
+        <div class="producto">
+          <img src="arroz.jpeg" alt="Arroz">
+
+          <div>
+            <h3>Arroz</h3>
+            <span class="disponible">Disponible</span>
+            <p>Stock: 200 kg</p>
+          </div>
+        </div>
+
+        <div class="producto">
+          <img src="aceite.jpeg" alt="Aceite">
+
+          <div>
+            <h3>Aceite</h3>
+            <span class="medio">Medio stock</span>
+            <p>Stock: 35 litros</p>
+          </div>
+        </div>
+
+        <div class="producto">
+          <img src="fideos.jpeg" alt="Fideos">
+
+          <div>
+            <h3>Fideos</h3>
+            <span class="disponible">Disponible</span>
+            <p>Stock: 80 paquetes</p>
+          </div>
+        </div>
+
+        <div class="producto">
+          <img src="lentejas.jpeg" alt="Lentejas">
+
+          <div>
+            <h3>Lentejas</h3>
+            <span class="bajo">Bajo stock</span>
+            <p>Stock: 15 kg</p>
+          </div>
+        </div>
+
+        <div class="producto">
+          <img src="yogurt.jpeg" alt="Yogurt">
+
+          <div>
+            <h3>Yogurt</h3>
+            <span class="disponible">Disponible</span>
+            <p>Stock: 50 unidades</p>
+          </div>
+        </div>
+
+        <div class="producto">
+          <img src="avena.jpeg" alt="Avena">
+
+          <div>
+            <h3>Avena</h3>
+            <span class="disponible">Disponible</span>
+            <p>Stock: 90 kg</p>
+          </div>
+        </div>
+
+        <div class="producto">
+          <img src="quinua.jpeg" alt="Quinua">
+
+          <div>
+            <h3>Quinua</h3>
+            <span class="disponible">Disponible</span>
+            <p>Stock: 70 kg</p>
+          </div>
+        </div>
+
+      </div>
+
+      <button
+        type="button"
+        class="btn-carrusel"
+        onclick="moverCarrusel(1)"
+        aria-label="Mover carrusel a la derecha"
+      >
+        &gt;
+      </button>
+
+    </div>
+  </section>
+
+
+  <!-- Buscador, filtro y botón de registro -->
+  <section class="filtros">
+
+    <input
+      type="text"
+      id="buscarOlla"
+      placeholder="Buscar por nombre o ubicación..."
+      autocomplete="off"
+    >
+
+    <select id="filtroPrioridad">
+      <option value="">Todas las prioridades</option>
+      <option value="alta">Alta</option>
+      <option value="media">Media</option>
+      <option value="baja">Baja</option>
+    </select>
+
+    <button type="button" id="btnAbrirRegistro">
+      + Registrar Olla
+    </button>
+
+  </section>
+
+
+  <!-- Aquí JavaScript colocará las ollas obtenidas desde Flask -->
+  <section class="ollas" id="ollasContenedor">
+  </section>
+
+
+  <!-- Mensaje cuando una búsqueda no encuentra resultados -->
+  <p id="mensajeSinResultados" class="mensaje-vacio">
+    No se encontraron ollas comunes.
+  </p>
+
+
+  <!-- Modal para ver los detalles de una olla -->
+  <div
+    class="modal-overlay"
+    id="modalDetalle"
+    aria-hidden="true"
+  >
+
+    <div class="modal-contenido">
+
+      <button
+        type="button"
+        class="modal-cerrar"
+        data-cerrar="modalDetalle"
+        aria-label="Cerrar detalles"
+      >
+        &times;
+      </button>
+
+      <h2>Detalles de la Olla Común</h2>
+
+      <div class="detalle-fila">
+        <strong>Nombre:</strong>
+        <span id="detalleNombre"></span>
+      </div>
+
+      <div class="detalle-fila">
+        <strong>Responsable:</strong>
+        <span id="detalleResponsable"></span>
+      </div>
+
+      <div class="detalle-fila">
+        <strong>Ubicación:</strong>
+        <span id="detalleUbicacion"></span>
+      </div>
+
+      <div class="detalle-fila">
+        <strong>Beneficiarios:</strong>
+        <span id="detalleBeneficiarios"></span>
+      </div>
+
+      <div class="detalle-fila">
+        <strong>Prioridad:</strong>
+        <span id="detallePrioridad"></span>
+      </div>
+
+      <div class="detalle-fila">
+        <strong>Estado:</strong>
+        <span id="detalleEstado"></span>
+      </div>
+
+    </div>
+  </div>
+
+
+  <!-- Modal para registrar una nueva olla -->
+  <div
+    class="modal-overlay"
+    id="modalRegistro"
+    aria-hidden="true"
+  >
+
+    <div class="modal-contenido">
+
+      <button
+        type="button"
+        class="modal-cerrar"
+        data-cerrar="modalRegistro"
+        aria-label="Cerrar registro"
+      >
+        &times;
+      </button>
+
+      <h2>Registrar Olla Común</h2>
+
+      <form id="formRegistrarOlla">
+
+        <div class="grupo-formulario">
+          <label for="registroNombre">
+            Nombre de la olla
+          </label>
+
+          <input
+            type="text"
+            id="registroNombre"
+            required
+            maxlength="100"
+            placeholder="Ejemplo: Olla Común Los Jardines"
+          >
+        </div>
+
+        <div class="grupo-formulario">
+          <label for="registroResponsable">
+            Responsable
+          </label>
+
+          <input
+            type="text"
+            id="registroResponsable"
+            required
+            maxlength="100"
+            placeholder="Nombre del responsable"
+          >
+        </div>
+
+        <div class="grupo-formulario">
+          <label for="registroUbicacion">
+            Ubicación
+          </label>
+
+          <input
+            type="text"
+            id="registroUbicacion"
+            required
+            maxlength="150"
+            placeholder="Distrito o dirección"
+          >
+        </div>
+
+        <div class="grupo-formulario">
+          <label for="registroBeneficiarios">
+            Beneficiarios
+          </label>
+
+          <input
+            type="text"
+            id="registroBeneficiarios"
+            required
+            maxlength="100"
+            placeholder="Ejemplo: 50 familias"
+          >
+        </div>
+
+        <div class="grupo-formulario">
+          <label for="registroPrioridad">
+            Prioridad
+          </label>
+
+          <select id="registroPrioridad" required>
+            <option value="">
+              Seleccione una prioridad
+            </option>
+
+            <option value="alta">Alta</option>
+            <option value="media">Media</option>
+            <option value="baja">Baja</option>
+          </select>
+        </div>
+
+        <div class="acciones-modal">
+
+          <button
+            type="button"
+            class="btn-cancelar"
+            data-cerrar="modalRegistro"
+          >
+            Cancelar
+          </button>
+
+          <button type="submit" class="btn-guardar">
+            Registrar
+          </button>
+
+        </div>
+
+        <p
+          id="mensajeRegistro"
+          class="mensaje-registro"
+        ></p>
+
+      </form>
+    </div>
+  </div>
+
+
+  <!-- Pie de página -->
+  <footer>
+    <h2>Contribuye a la Reducción de Desigualdades</h2>
+
+    <p>
+      Únete a una red de solidaridad real donde tu aporte
+      hace diferencia en cada familia
+    </p>
+
+    <button type="button">
+      Comienza a Ayudar
+    </button>
+  </footer>
+
+
+  <!-- JavaScript -->
+  <script>
+    const API_OLLAS = "http://127.0.0.1:5000/api/ollas";
+
+    let listaOllas = [];
+
+    const contenedorOllas = document.getElementById(
+      "ollasContenedor"
+    );
+
+    const buscadorOllas = document.getElementById(
+      "buscarOlla"
+    );
+
+    const filtroPrioridad = document.getElementById(
+      "filtroPrioridad"
+    );
+
+    const mensajeSinResultados = document.getElementById(
+      "mensajeSinResultados"
+    );
+
+    const modalDetalle = document.getElementById(
+      "modalDetalle"
+    );
+
+    const modalRegistro = document.getElementById(
+      "modalRegistro"
+    );
+
+    const formularioRegistro = document.getElementById(
+      "formRegistrarOlla"
+    );
+
+    const mensajeRegistro = document.getElementById(
+      "mensajeRegistro"
+    );
+
+
+    // Movimiento del carrusel
+    function moverCarrusel(direccion) {
+      const contenedor = document.getElementById(
+        "stockContenedor"
+      );
+
+      if (!contenedor) {
+        return;
+      }
+
+      contenedor.scrollBy({
+        left: direccion * 300,
+        behavior: "smooth"
+      });
+    }
+
+
+    // Evita insertar código HTML recibido desde la API
+    function escaparHTML(valor) {
+      const elemento = document.createElement("div");
+      elemento.textContent = valor ?? "";
+
+      return elemento.innerHTML;
+    }
+
+
+    // Convierte el texto para realizar búsquedas
+    function normalizarTexto(valor) {
+      return String(valor ?? "")
+        .toLowerCase()
+        .normalize("NFD")
+        .replace(/[\u0300-\u036f]/g, "")
+        .trim();
+    }
+
+
+    // Busca un campo dentro de la descripción
+    function extraerCampo(descripcion, campo) {
+      if (!descripcion) {
+        return "";
+      }
+
+      const expresion = new RegExp(
+        campo + "\\s*:\\s*([^\\n|]+)",
+        "i"
+      );
+
+      const resultado = String(descripcion).match(expresion);
+
+      return resultado ? resultado[1].trim() : "";
+    }
+
+
+    function normalizarPrioridad(prioridad) {
+      const valor = normalizarTexto(prioridad);
+
+      if (
+        valor === "alta" ||
+        valor === "media" ||
+        valor === "baja"
+      ) {
+        return valor;
+      }
+
+      return "media";
+    }
+
+
+    function mostrarPrioridad(prioridad) {
+      const valor = normalizarPrioridad(prioridad);
+
+      return valor.charAt(0).toUpperCase() + valor.slice(1);
+    }
+
+
+    // Adapta los datos recibidos desde Flask
+    function normalizarOlla(olla) {
+      const descripcion = olla.descripcion || "";
+
+      return {
+        id: olla.id ?? olla.olla_id,
+
+        nombre:
+          olla.nombre ||
+          "Olla común sin nombre",
+
+        responsable:
+          olla.responsable ||
+          extraerCampo(descripcion, "Responsable") ||
+          "No registrado",
+
+        ubicacion:
+          olla.ubicacion ||
+          olla.direccion ||
+          "No registrada",
+
+        beneficiarios:
+          olla.beneficiarios ||
+          extraerCampo(descripcion, "Beneficiarios") ||
+          "No registrados",
+
+        prioridad: normalizarPrioridad(
+          olla.prioridad ||
+          extraerCampo(descripcion, "Prioridad")
+        ),
+
+        estado:
+          olla.estado ||
+          "pendiente",
+
+        descripcion: descripcion
+      };
+    }
+
+
+    // Carga todas las ollas desde Flask
+    async function cargarOllas() {
+      contenedorOllas.innerHTML = `
+        <p class="cargando">
+          Cargando ollas comunes...
+        </p>
+      `;
+
+      try {
+        const respuesta = await fetch(API_OLLAS);
+
+        if (!respuesta.ok) {
+          throw new Error(
+            "No se pudieron obtener las ollas comunes."
+          );
+        }
+
+        const datos = await respuesta.json();
+
+        listaOllas = Array.isArray(datos)
+          ? datos.map(normalizarOlla)
+          : [];
+
+        aplicarFiltros();
+
+      } catch (error) {
+        console.error(error);
+
+        contenedorOllas.innerHTML = `
+          <div class="error-carga">
+            No se pudo conectar con Flask.
+            Verifica que app.py esté ejecutándose
+            en el puerto 5000.
+          </div>
+        `;
+      }
+    }
+
+
+    // Muestra las tarjetas
+    function mostrarOllas(ollas) {
+      contenedorOllas.innerHTML = "";
+
+      mensajeSinResultados.style.display =
+        ollas.length === 0 ? "block" : "none";
+
+      ollas.forEach((olla) => {
+        const tarjeta = document.createElement("div");
+
+        tarjeta.className = "card";
+
+        const estadoNormalizado = normalizarTexto(
+          olla.estado
+        );
+
+        const validada = [
+          "activa",
+          "validada",
+          "aprobada"
+        ].includes(estadoNormalizado);
+
+        const claseEstado = validada
+          ? "validada"
+          : "pendiente";
+
+        const textoEstado = validada
+          ? "✓ Validada"
+          : "⏳ Pendiente";
+
+        tarjeta.innerHTML = `
+          <span class="tag ${escaparHTML(olla.prioridad)}">
+            ${escaparHTML(
+              mostrarPrioridad(olla.prioridad)
+            )}
+          </span>
+
+          <h4>
+            ${escaparHTML(olla.nombre)}
+          </h4>
+
+          <p>
+            <b>Responsable:</b>
+            ${escaparHTML(olla.responsable)}
+          </p>
+
+          <p>
+            📍 Ubicación:
+            ${escaparHTML(olla.ubicacion)}
+          </p>
+
+          <p>
+            👥 Beneficiarios:
+            ${escaparHTML(olla.beneficiarios)}
+          </p>
+
+          <button
+            type="button"
+            class="btn-ver-detalle"
+            data-id="${escaparHTML(olla.id)}"
+          >
+            Ver Detalles
+          </button>
+
+          <button
+            type="button"
+            class="${claseEstado}"
+            disabled
+          >
+            ${textoEstado}
+          </button>
+        `;
+
+        contenedorOllas.appendChild(tarjeta);
+      });
+    }
+
+
+    // Busca por nombre, ubicación o responsable
+    function aplicarFiltros() {
+      const textoBuscado = normalizarTexto(
+        buscadorOllas.value
+      );
+
+      const prioridadSeleccionada = normalizarTexto(
+        filtroPrioridad.value
+      );
+
+      const resultados = listaOllas.filter((olla) => {
+        const coincideTexto =
+          normalizarTexto(olla.nombre).includes(
+            textoBuscado
+          ) ||
+          normalizarTexto(olla.ubicacion).includes(
+            textoBuscado
+          ) ||
+          normalizarTexto(olla.responsable).includes(
+            textoBuscado
+          );
+
+        const coincidePrioridad =
+          prioridadSeleccionada === "" ||
+          normalizarTexto(olla.prioridad) ===
+          prioridadSeleccionada;
+
+        return coincideTexto && coincidePrioridad;
+      });
+
+      mostrarOllas(resultados);
+    }
+
+
+    function abrirModal(modal) {
+      modal.classList.add("activo");
+      modal.setAttribute("aria-hidden", "false");
+
+      document.body.style.overflow = "hidden";
+    }
+
+
+    function cerrarModal(modal) {
+      modal.classList.remove("activo");
+      modal.setAttribute("aria-hidden", "true");
+
+      document.body.style.overflow = "";
+    }
+
+
+    // Obtiene y muestra el detalle de una olla
+    async function verDetalle(ollaId) {
+      try {
+        const respuesta = await fetch(
+          `${API_OLLAS}/${ollaId}`
+        );
+
+        if (!respuesta.ok) {
+          throw new Error(
+            "No se encontraron los detalles."
+          );
+        }
+
+        const datos = await respuesta.json();
+        const olla = normalizarOlla(datos);
+
+        document.getElementById(
+          "detalleNombre"
+        ).textContent = olla.nombre;
+
+        document.getElementById(
+          "detalleResponsable"
+        ).textContent = olla.responsable;
+
+        document.getElementById(
+          "detalleUbicacion"
+        ).textContent = olla.ubicacion;
+
+        document.getElementById(
+          "detalleBeneficiarios"
+        ).textContent = olla.beneficiarios;
+
+        document.getElementById(
+          "detallePrioridad"
+        ).textContent = mostrarPrioridad(
+          olla.prioridad
+        );
+
+        document.getElementById(
+          "detalleEstado"
+        ).textContent = olla.estado;
+
+        abrirModal(modalDetalle);
+
+      } catch (error) {
+        console.error(error);
+        alert(error.message);
+      }
+    }
+
+
+    // Registro de una nueva olla
+    formularioRegistro.addEventListener(
+      "submit",
+      async (evento) => {
+        evento.preventDefault();
+
+        const nombre = document
+          .getElementById("registroNombre")
+          .value
+          .trim();
+
+        const responsable = document
+          .getElementById("registroResponsable")
+          .value
+          .trim();
+
+        const ubicacion = document
+          .getElementById("registroUbicacion")
+          .value
+          .trim();
+
+        const beneficiarios = document
+          .getElementById("registroBeneficiarios")
+          .value
+          .trim();
+
+        const prioridad = document
+          .getElementById("registroPrioridad")
+          .value;
+
+        if (
+          !nombre ||
+          !responsable ||
+          !ubicacion ||
+          !beneficiarios ||
+          !prioridad
+        ) {
+          mensajeRegistro.textContent =
+            "Completa todos los campos.";
+
+          mensajeRegistro.style.color = "#c0392b";
+
+          return;
+        }
+
+        const descripcion = [
+          `Responsable: ${responsable}`,
+          `Beneficiarios: ${beneficiarios}`,
+          `Prioridad: ${prioridad}`
+        ].join("\n");
+
+        const datosNuevaOlla = {
+          nombre: nombre,
+          direccion: ubicacion,
+          descripcion: descripcion
+        };
+
+        const botonGuardar =
+          formularioRegistro.querySelector(
+            'button[type="submit"]'
+          );
+
+        botonGuardar.disabled = true;
+        botonGuardar.textContent = "Registrando...";
+
+        try {
+          const respuesta = await fetch(API_OLLAS, {
+            method: "POST",
+
+            headers: {
+              "Content-Type": "application/json"
+            },
+
+            body: JSON.stringify(datosNuevaOlla)
+          });
+
+          const resultado = await respuesta
+            .json()
+            .catch(() => {
+              return {};
+            });
+
+          if (!respuesta.ok) {
+            throw new Error(
+              resultado.error ||
+              resultado.message ||
+              "No se pudo registrar la olla común."
+            );
+          }
+
+          mensajeRegistro.textContent =
+            "Olla común registrada correctamente.";
+
+          mensajeRegistro.style.color = "#1e8449";
+
+          formularioRegistro.reset();
+
+          await cargarOllas();
+
+          setTimeout(() => {
+            cerrarModal(modalRegistro);
+            mensajeRegistro.textContent = "";
+          }, 900);
+
+        } catch (error) {
+          console.error(error);
+
+          mensajeRegistro.textContent = error.message;
+          mensajeRegistro.style.color = "#c0392b";
+
+        } finally {
+          botonGuardar.disabled = false;
+          botonGuardar.textContent = "Registrar";
+        }
+      }
+    );
+
+
+    // Buscar mientras se escribe
+    buscadorOllas.addEventListener(
+      "input",
+      aplicarFiltros
+    );
+
+
+    // Filtrar por prioridad
+    filtroPrioridad.addEventListener(
+      "change",
+      aplicarFiltros
+    );
+
+
+    // Abrir formulario de registro
+    document
+      .getElementById("btnAbrirRegistro")
+      .addEventListener("click", () => {
+        mensajeRegistro.textContent = "";
+        abrirModal(modalRegistro);
+
+        setTimeout(() => {
+          document
+            .getElementById("registroNombre")
+            .focus();
+        }, 100);
+      });
+
+
+    // Detectar clic en Ver Detalles
+    contenedorOllas.addEventListener(
+      "click",
+      (evento) => {
+        const boton = evento.target.closest(
+          ".btn-ver-detalle"
+        );
+
+        if (!boton) {
+          return;
+        }
+
+        verDetalle(boton.dataset.id);
+      }
+    );
+
+
+    // Botones para cerrar las ventanas
+    document
+      .querySelectorAll("[data-cerrar]")
+      .forEach((boton) => {
+        boton.addEventListener("click", () => {
+          const modalId = boton.dataset.cerrar;
+
+          const modal = document.getElementById(
+            modalId
+          );
+
+          cerrarModal(modal);
+        });
+      });
+
+
+    // Cerrar al hacer clic en el fondo oscuro
+    document
+      .querySelectorAll(".modal-overlay")
+      .forEach((modal) => {
+        modal.addEventListener(
+          "click",
+          (evento) => {
+            if (evento.target === modal) {
+              cerrarModal(modal);
+            }
+          }
+        );
+      });
+
+
+    // Cerrar usando la tecla Escape
+    document.addEventListener(
+      "keydown",
+      (evento) => {
+        if (evento.key === "Escape") {
+          document
+            .querySelectorAll(
+              ".modal-overlay.activo"
+            )
+            .forEach(cerrarModal);
+        }
+      }
+    );
+
+
+    // Cargar ollas al abrir la página
+    cargarOllas();
+  </script>
+
+</body>
+</html>

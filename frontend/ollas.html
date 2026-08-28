@@ -1,0 +1,152 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Ollas Comunes - Red Comunitaria</title>
+    <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/css/bootstrap.min.css" rel="stylesheet">
+    <link rel="stylesheet" href="css/styles.css">
+</head>
+<body>
+    <!-- Navegación -->
+    <nav class="navbar navbar-expand-lg navbar-light bg-white shadow-sm">
+        <div class="container">
+            <a class="navbar-brand fw-bold" href="index.html">
+                <span class="text-primary">Red</span>Comunitaria
+            </a>
+            <button class="navbar-toggler" type="button" data-bs-toggle="collapse" data-bs-target="#navbarNav" aria-label="Abrir navegación">
+                <span class="navbar-toggler-icon"></span>
+            </button>
+            <div class="collapse navbar-collapse" id="navbarNav">
+                <ul class="navbar-nav ms-auto">
+                    <li class="nav-item">
+                        <a class="nav-link" href="index.html">Inicio</a>
+                    </li>
+                    <li class="nav-item">
+                        <a id="navOllas" class="nav-link active" href="ollas.html">Ollas Comunes</a>
+                    </li>
+                    <li class="nav-item">
+                        <a id="navDonar" class="nav-link" href="donar.html">Donar Ahora</a>
+                    </li>
+                    <li class="nav-item d-flex align-items-center gap-2 ms-2">
+                        <button id="themeToggle" class="btn btn-outline-primary btn-sm" type="button">☀️ Modo claro</button>
+                        <a id="navLogin" class="btn btn-primary btn-sm" href="login.html">Iniciar Sesión</a>
+                        <a id="navProfile" class="nav-link d-none" href="dashboard.html">Mi Perfil</a>
+                        <button id="navLogout" class="btn btn-danger btn-sm d-none ms-2">Cerrar Sesión</button>
+                    </li>
+                </ul>
+            </div>
+        </div>
+    </nav>
+
+    <!-- Header -->
+    <section class="bg-primary text-white py-5">
+        <div class="container">
+            <h1 class="display-5 fw-bold mb-3">Ollas Comunes</h1>
+            <p class="lead">Conoce las ollas comunes que se benefician de nuestras donaciones</p>
+        </div>
+    </section>
+
+    <!-- Filtros y Listado -->
+    <div class="container py-5">
+        <div class="row mb-4 align-items-end">
+            <div class="col-md-6">
+                <div class="mb-3">
+                    <label for="filterEstado" class="form-label">Filtrar por estado:</label>
+                    <select class="form-select" id="filterEstado">
+                        <option value="">Todos</option>
+                        <option value="activa">Activas</option>
+                        <option value="pausada">Pausadas</option>
+                        <option value="inactiva">Inactivas</option>
+                    </select>
+                </div>
+            </div>
+            <div class="col-md-6">
+                <div class="mb-3">
+                    <label for="searchOlla" class="form-label">Buscar olla:</label>
+                    <input type="text" class="form-control" id="searchOlla" placeholder="Nombre de la olla...">
+                </div>
+            </div>
+        </div>
+
+        <div class="row mb-4">
+            <div class="col-12 d-flex justify-content-end">
+                <button class="btn btn-primary" data-bs-toggle="collapse" data-bs-target="#registerOllaCollapse">+ Registrar Olla</button>
+            </div>
+        </div>
+
+        <div class="collapse" id="registerOllaCollapse">
+            <div class="card card-body mb-4">
+                <form id="registerOllaForm">
+                    <div class="row g-3">
+                        <div class="col-md-6">
+                            <label class="form-label">Nombre de la Olla</label>
+                            <input type="text" id="newOllaNombre" class="form-control" required>
+                        </div>
+                        <div class="col-md-6">
+                            <label class="form-label">Responsable (opcional)</label>
+                            <input type="text" id="newOllaResponsable" class="form-control">
+                        </div>
+                        <div class="col-md-6">
+                            <label class="form-label">Distrito / Ubicación</label>
+                            <input type="text" id="newOllaDireccion" class="form-control" required>
+                        </div>
+                        <div class="col-md-6">
+                            <label class="form-label">Teléfono</label>
+                            <input type="text" id="newOllaTelefono" class="form-control">
+                        </div>
+                        <div class="col-12">
+                            <label class="form-label">Descripción</label>
+                            <textarea id="newOllaDescripcion" class="form-control" rows="2"></textarea>
+                        </div>
+                        <div class="col-12 text-end">
+                            <button type="button" class="btn btn-secondary" data-bs-toggle="collapse" data-bs-target="#registerOllaCollapse">Cancelar</button>
+                            <button type="submit" class="btn btn-primary">Registrar Olla</button>
+                        </div>
+                    </div>
+                </form>
+            </div>
+        </div>
+
+        <!-- Ollas List -->
+        <div id="ollasList" class="row">
+            <div class="col-12 text-center py-5">
+                <div class="spinner-border" role="status">
+                    <span class="visually-hidden">Cargando...</span>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- Footer -->
+    <footer class="bg-light py-4 border-top">
+        <div class="container text-center text-muted">
+            <p>&copy; 2026 Red Comunitaria. Todos los derechos reservados.</p>
+        </div>
+    </footer>
+
+    <!-- Modal para detalles de olla -->
+    <div class="modal fade" id="ollaModal" tabindex="-1">
+        <div class="modal-dialog">
+            <div class="modal-content">
+                <div class="modal-header">
+                    <h5 class="modal-title" id="ollaModalTitle"></h5>
+                    <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Cerrar"></button>
+                </div>
+                <div class="modal-body">
+                    <div id="ollaModalBody"></div>
+                </div>
+                <div class="modal-footer">
+                    <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Cerrar</button>
+                    <a id="donateBtn" href="donar.html" class="btn btn-primary">Donar a esta Olla</a>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/js/bootstrap.bundle.min.js"></script>
+    <script src="js/api.js"></script>
+    <script src="js/nav.js"></script>
+    <script src="js/ollas.js"></script>
+</body>
+</html>

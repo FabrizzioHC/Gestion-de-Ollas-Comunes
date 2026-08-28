@@ -1,0 +1,183 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Donar - Red Comunitaria</title>
+    <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/css/bootstrap.min.css" rel="stylesheet">
+    <link rel="stylesheet" href="css/styles.css">
+</head>
+<body class="bg-light">
+    <!-- Navegación -->
+    <nav class="navbar navbar-expand-lg navbar-light bg-white shadow-sm" role="navigation" aria-label="Navegación principal">
+        <div class="container">
+            <a class="navbar-brand fw-bold" href="index.html">
+                <span class="text-primary">Red</span>Comunitaria
+            </a>
+            <button class="navbar-toggler" type="button" data-bs-toggle="collapse" data-bs-target="#navbarNav" aria-label="Abrir navegación">
+                <span class="navbar-toggler-icon"></span>
+            </button>
+            <div class="collapse navbar-collapse" id="navbarNav">
+                <ul class="navbar-nav ms-auto">
+                    <li class="nav-item">
+                        <a class="nav-link" href="index.html">Inicio</a>
+                    </li>
+                    <li class="nav-item">
+                        <a id="navOllas" class="nav-link" href="ollas.html">Ollas Comunes</a>
+                    </li>
+                    <li class="nav-item">
+                        <a id="navDonar" class="nav-link active" href="donar.html">Donar Ahora</a>
+                    </li>
+                    <li class="nav-item d-flex align-items-center gap-2 ms-2">
+                        <button id="themeToggle" class="btn btn-outline-primary btn-sm" type="button">☀️ Modo claro</button>
+                        <a id="navLogin" class="btn btn-primary btn-sm" href="login.html">Iniciar Sesión</a>
+                        <a id="navProfile" class="nav-link d-none" href="dashboard.html">Mi Perfil</a>
+                        <button id="navLogout" class="btn btn-danger btn-sm d-none ms-2">Cerrar Sesión</button>
+                    </li>
+                </ul>
+            </div>
+        </div>
+    </nav>
+
+    <!-- Header -->
+    <section class="bg-primary text-white py-5">
+        <div class="container">
+            <h1 class="display-5 fw-bold mb-3">Hacer una Donación</h1>
+            <p class="lead">Tu aporte hace una diferencia real en nuestras comunidades</p>
+        </div>
+    </section>
+
+    <!-- Donation Form -->
+    <div class="container py-5">
+                <!-- Información adicional -->
+        <div class="row justify-content-center mt-5">
+            <div class="col-md-8">
+                <div class="alert alert-light border">
+                    <h5 class="mb-3">Pasos para donar:</h5>
+                    <ol class="mb-0">
+                        <li>Selecciona la olla común que deseas ayudar</li>
+                        <li>Especifica el tipo y cantidad de recursos que donarás</li>
+                        <li>Agrega detalles relevantes de la donación</li>
+                        <li>Los administradores revisarán y aprobarán tu donación</li>
+                        <li>Coordinaremos la entrega del recurso</li>
+                    </ol>
+                </div>
+            </div>
+        </div>
+        <div class="row justify-content-center">
+            <div class="col-md-8">
+                <div class="card shadow">
+                    <div class="card-body p-4">
+                        <h4 class="mb-4">Registra tu Donación</h4>
+
+                        <!-- Alert for non-authenticated users -->
+                        <div id="authAlert" class="alert alert-info d-none" role="alert">
+                            Por favor <a href="login.html" class="alert-link">inicia sesión</a> para registrar una donación.
+                        </div>
+
+                        <form id="donationForm">
+                            <div class="mb-3">
+                                <label for="olla_comun_id" class="form-label">Selecciona una Olla Común *</label>
+                                <select class="form-select" id="olla_comun_id" name="olla_comun_id" required>
+                                    <option value="">-- Selecciona una olla --</option>
+                                </select>
+                            </div>
+
+                            <div class="mb-3">
+                                <label for="tipo_recurso" class="form-label">Tipo de Recurso *</label>
+                                <select class="form-select" id="tipo_recurso" name="tipo_recurso" required>
+                                    <option value="">-- Selecciona un tipo --</option>
+                                    <option value="alimentos">Alimentos</option>
+                                    <option value="medicinas">Medicinas</option>
+                                    <option value="ropa">Ropa</option>
+                                    <option value="utensilios">Utensilios de cocina</option>
+                                    <option value="higiene">Productos de higiene</option>
+                                    <option value="otro">Otro</option>
+                                </select>
+                            </div>
+
+                            <div class="row">
+                                <div class="col-md-6 mb-3">
+                                    <label for="cantidad" class="form-label">Cantidad *</label>
+                                    <input type="number" class="form-control" id="cantidad" name="cantidad" 
+                                           min="0.1" step="0.1" required>
+                                </div>
+                                <div class="col-md-6 mb-3">
+                                    <label for="unidad" class="form-label">Unidad *</label>
+                                    <select class="form-select" id="unidad" name="unidad" required>
+                                        <option value="">-- Selecciona --</option>
+                                        <option value="kg">Kilogramos (kg)</option>
+                                        <option value="l">Litros (l)</option>
+                                        <option value="porciones">Porciones</option>
+                                        <option value="unidades">Unidades</option>
+                                        <option value="cajas">Cajas</option>
+                                        <option value="bolsas">Bolsas</option>
+                                    </select>
+                                </div>
+                            </div>
+
+                            <div class="mb-3">
+                                <label for="descripcion" class="form-label">Descripción</label>
+                                <textarea class="form-control" id="descripcion" name="descripcion" rows="3" 
+                                          placeholder="Detalla características del recurso..."></textarea>
+                            </div>
+
+                            <button type="submit" class="btn btn-primary w-100 mb-3">Registrar Donación</button>
+                        </form>
+
+                        <div id="errorAlert" class="alert alert-danger d-none" role="alert"></div>
+                        <div id="successAlert" class="alert alert-success d-none" role="alert"></div>
+                    </div>
+                </div>
+            </div>
+        </div>
+
+        <div class="row justify-content-center mt-5">
+            <div class="col-lg-10">
+                <div class="card shadow">
+                    <div class="card-body p-4">
+                        <div class="d-flex flex-wrap justify-content-between align-items-center gap-3 mb-4">
+                            <div>
+                                <h4 class="mb-1">Últimas Donaciones</h4>
+                                <p class="text-muted mb-0">Seguimiento del estado de los registros.</p>
+                            </div>
+                            <span class="badge rounded-pill text-bg-light border">Aprobado, Pendiente y Cancelado</span>
+                        </div>
+
+                        <div class="table-responsive">
+                            <table class="table align-middle mb-0">
+                                <thead>
+                                    <tr>
+                                        <th>Donante</th>
+                                        <th>Recurso</th>
+                                        <th>Cantidad</th>
+                                        <th>Destino</th>
+                                        <th>Estado</th>
+                                        <th>Fecha</th>
+                                    </tr>
+                                </thead>
+                                <tbody id="donacionesTableBody">
+                                    <tr>
+                                        <td colspan="6" class="text-center text-muted py-4">Cargando donaciones...</td>
+                                    </tr>
+                                </tbody>
+                            </table>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- Footer -->
+    <footer class="bg-light py-4 border-top mt-5">
+        <div class="container text-center text-muted">
+            <p>&copy; 2026 Red Comunitaria. Todos los derechos reservados.</p>
+        </div>
+    </footer>
+
+    <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/js/bootstrap.bundle.min.js"></script>
+    <script src="js/api.js"></script>
+    <script src="js/nav.js"></script>
+    <script src="js/donar.js"></script>
+</body>
+</html>

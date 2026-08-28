@@ -1,0 +1,150 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Registrarse - Red Comunitaria</title>
+    <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/css/bootstrap.min.css" rel="stylesheet">
+    <link rel="stylesheet" href="css/styles.css">
+</head>
+<body class="bg-light">
+    <!-- Navegación -->
+    <nav class="navbar navbar-expand-lg navbar-light bg-white shadow-sm">
+        <div class="container">
+            <a class="navbar-brand fw-bold" href="index.html">
+                <span class="text-primary">Red</span>Comunitaria
+            </a>
+            <div class="ms-auto d-flex align-items-center gap-2">
+                <button id="themeToggle" class="btn btn-outline-primary btn-sm" type="button">☀️ Modo claro</button>
+            </div>
+        </div>
+    </nav>
+
+    <!-- Register Form -->
+    <div class="container py-5">
+        <div class="row justify-content-center">
+            <div class="col-md-6">
+                <div class="card shadow">
+                    <div class="card-body p-4">
+                        <h3 class="card-title mb-4 text-center">Crear Cuenta</h3>
+
+                        <!-- Role Selector -->
+                        <div class="mb-4">
+                            <label class="form-label">¿Qué tipo de usuario eres?</label>
+                            <div class="btn-group w-100" role="group">
+                                <input type="radio" class="btn-check" name="role" id="roleDonador" value="donador" checked>
+                                <label class="btn btn-outline-primary" for="roleDonador">
+                                    Donador
+                                </label>
+
+                                <input type="radio" class="btn-check" name="role" id="roleOlla" value="olla_comun">
+                                <label class="btn btn-outline-primary" for="roleOlla">
+                                    Olla Común
+                                </label>
+
+                                <input type="radio" class="btn-check" name="role" id="roleBeneficiario" value="beneficiario">
+                                <label class="btn btn-outline-primary" for="roleBeneficiario">
+                                    Beneficiario
+                                </label>
+                            </div>
+                        </div>
+
+                        <form id="registerForm">
+                            <div class="mb-3">
+                                <label for="nombre" class="form-label">Nombre Completo</label>
+                                <input type="text" class="form-control" id="nombre" name="nombre" required>
+                            </div>
+
+                            <div class="mb-3">
+                                <label for="email" class="form-label">Email</label>
+                                <input type="email" class="form-control" id="email" name="email" required>
+                            </div>
+
+                            <div class="mb-3">
+                                <label for="telefono" class="form-label">Teléfono</label>
+                                <input type="tel" class="form-control" id="telefono" name="telefono">
+                            </div>
+
+
+                            <!-- campo para el beneficiario-->
+                            <div id="beneficiarioFields" style="display: none;">
+                                <div class="mb-3">
+                                    <label for="dni" class="form-label">DNI</label>
+                                    <input type="text" class="form-control" id="dni" name="dni">
+                                </div>
+                                <div class="mb-3">
+                                    <label for="edad" class="form-label">Edad</label>
+                                    <input type="number" class="form-control" id="edad" name="edad">
+                                </div>
+                                <div class="mb-3">
+                                    <label for="olla_asociada_id" class="form-label">Olla Común Asociada</label>
+                                    <select class="form-select" id="olla_asociada_id" name="olla_asociada_id">
+                                        <option value="">Seleccione una Olla Común</option>
+                                        </select>
+                                </div>
+                                <div class="mb-3">
+                                    <label for="vulnerabilidad" class="form-label">Nivel de Vulnerabilidad</label>
+                                    <select class="form-select" id="vulnerabilidad" name="vulnerabilidad">
+                                        <option value="bajo">Bajo</option>
+                                        <option value="medio">Medio</option>
+                                        <option value="alto">Alto</option>
+                                    </select>
+                                </div>
+                            </div>
+
+                            <!-- Campo adicional para Olla Común -->
+                            <div id="direccionField" class="mb-3" style="display: none;">
+                                <label for="direccion" class="form-label">Dirección</label>
+                                <input type="text" class="form-control" id="direccion" name="direccion">
+                            </div>
+
+                            <div id="nombreOllaField" class="mb-3" style="display: none;">
+                                <label for="nombreOlla" class="form-label">Nombre de la Olla Común</label>
+                                <input type="text" class="form-control" id="nombreOlla" name="nombreOlla">
+                            </div>
+
+                            <div id="descripcionField" class="mb-3" style="display: none;">
+                                <label for="descripcion" class="form-label">Descripción de la Olla</label>
+                                <textarea class="form-control" id="descripcion" name="descripcion" rows="3"></textarea>
+                            </div>
+
+                            <div class="mb-3">
+                                <label for="password" class="form-label">Contraseña</label>
+                                <input type="password" class="form-control" id="password" name="password" required>
+                            </div>
+
+                            <div class="mb-3">
+                                <label for="confirmPassword" class="form-label">Confirmar Contraseña</label>
+                                <input type="password" class="form-control" id="confirmPassword" name="confirmPassword" required>
+                            </div>
+
+                            <button type="submit" class="btn btn-primary w-100 mb-3">Registrarse</button>
+                        </form>
+
+                        <div id="errorAlert" class="alert alert-danger d-none" role="alert"></div>
+                        <div id="successAlert" class="alert alert-success d-none" role="alert"></div>
+
+                        <hr class="my-4">
+
+                        <p class="text-center mb-0">
+                            ¿Ya tienes cuenta? <a href="login.html">Inicia sesión aquí</a>
+                        </p>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- Footer -->
+    <footer class="bg-light py-4 border-top mt-5">
+        <div class="container text-center text-muted">
+            <p>&copy; 2026 Red Comunitaria. Todos los derechos reservados.</p>
+        </div>
+    </footer>
+
+    <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/js/bootstrap.bundle.min.js"></script>
+    <script src="js/api.js"></script>
+    <script src="js/nav.js"></script>
+    <script src="js/register.js"></script>
+</body>
+</html>

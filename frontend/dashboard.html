@@ -1,0 +1,413 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Dashboard - Red Comunitaria</title>
+    <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/css/bootstrap.min.css" rel="stylesheet">
+    <link rel="stylesheet" href="css/styles.css">
+</head>
+<body>
+    <!-- Navegación -->
+    <nav class="navbar navbar-expand-lg navbar-light bg-white shadow-sm" role="navigation" aria-label="Navegación del panel">
+        <div class="container-fluid">
+            <button class="btn btn-outline-primary me-3 dashboard-menu-btn" type="button" data-bs-toggle="offcanvas" data-bs-target="#dashboardMenu" aria-controls="dashboardMenu" aria-label="Abrir menú del panel">
+                <span class="navbar-toggler-icon"></span>
+            </button>
+            <a class="navbar-brand fw-bold mb-0" href="index.html">
+                <span class="text-primary">Red</span>Comunitaria
+            </a>
+            <div class="collapse navbar-collapse" id="navbarNav">
+                <ul class="navbar-nav ms-auto">
+                    <li class="nav-item d-flex align-items-center gap-2">
+                        <button id="themeToggle" class="btn btn-outline-primary btn-sm" type="button">☀️ Modo claro</button>
+                    </li>
+                    <li class="nav-item">
+                        <span id="userEmail" class="nav-link"></span>
+                    </li>
+                    <li class="nav-item">
+                        <button class="btn btn-outline-danger btn-sm" id="logoutBtn">Cerrar Sesión</button>
+                    </li>
+                </ul>
+            </div>
+        </div>
+    </nav>
+
+    <!-- Menu lateral general -->
+    <div class="offcanvas offcanvas-start dashboard-offcanvas" tabindex="-1" id="dashboardMenu" aria-labelledby="dashboardMenuLabel">
+        <div class="offcanvas-header">
+            <h5 class="offcanvas-title fw-bold" id="dashboardMenuLabel">RedComunitaria</h5>
+            <button type="button" class="btn-close" data-bs-dismiss="offcanvas" aria-label="Cerrar menú"></button>
+        </div>
+        <div class="offcanvas-body">
+            <ul class="nav flex-column dashboard-nav">
+                <li class="nav-item">
+                    <a class="nav-link active" href="#" data-section="dashboard" data-bs-dismiss="offcanvas">
+                        📊 Dashboard
+                    </a>
+                </li>
+                <li class="nav-item" id="menuOllas" style="display: none;">
+                    <a class="nav-link" href="#" data-section="ollas" data-bs-dismiss="offcanvas">
+                        🏘️ Mis Ollas
+                    </a>
+                </li>
+                
+                <li class="nav-item" id="menuDonaciones">
+                    <a class="nav-link" href="#" data-section="donaciones" data-bs-dismiss="offcanvas">
+                        🎁 Mis Donaciones
+                    </a>
+                </li>
+                <li class="nav-item" id="menuGestionRecursos">
+                     <a class="nav-link" href="gestion-recursos.html">
+                         📦 Gestión de Recursos
+                     </a>
+                </li>
+                <li class="nav-item" id="menuSolicitudes" style="display: none;">
+                    <a class="nav-link" href="#" data-section="solicitudes" data-bs-dismiss="offcanvas">
+                        📋 Solicitudes
+                    </a>
+                </li>
+                <li class="nav-item" id="menuAdmin" style="display: none;">
+                    <a class="nav-link" href="#" data-section="admin" data-bs-dismiss="offcanvas">
+                        ⚙️ Administración
+                    </a>
+                </li>
+                <li class="nav-item">
+                    <a class="nav-link" href="#" data-section="profile" data-bs-dismiss="offcanvas">
+                        👤 Mi Perfil
+                    </a>
+                </li>
+                <li class="nav-item" id="menuGestionUsuarios" style="display: none;">
+                    <a class="nav-link" href="#" data-section="gestionUsuarios" data-bs-dismiss="offcanvas">
+                        👥 Gestión Usuarios
+                    </a>
+                </li>
+            </ul>
+        </div>
+    </div>
+
+    <!-- Main Content -->
+    <div class="container-fluid dashboard-shell">
+        <main class="px-md-4 py-4 dashboard-main">
+                <!-- Dashboard Section -->
+                <section id="dashboardSection" class="content-section">
+                    <h2 class="mb-4">Dashboard</h2>
+                    <div id="dashboardChartsContainer" class="mb-4"></div>
+                    <div class="row">
+                        <div class="col-md-6 col-lg-3 mb-4">
+                            <div class="card text-center">
+                                <div class="card-body">
+                                    <h6 class="card-title text-muted">Ollas Activas</h6>
+                                    <p class="display-6" id="statOllasActivas">-</p>
+                                </div>
+                            </div>
+                        </div>
+                        <div class="col-md-6 col-lg-3 mb-4">
+                            <div class="card text-center">
+                                <div class="card-body">
+                                    <h6 class="card-title text-muted">Donaciones Pendientes</h6>
+                                    <p class="display-6" id="statDonacionesPendientes">-</p>
+                                </div>
+                            </div>
+                        </div>
+                        <div class="col-md-6 col-lg-3 mb-4">
+                            <div class="card text-center">
+                                <div class="card-body">
+                                    <h6 class="card-title text-muted">Solicitudes Pendientes</h6>
+                                    <p class="display-6" id="statSolicitudesPendientes">-</p>
+                                </div>
+                            </div>
+                        </div>
+                        <div class="col-md-6 col-lg-3 mb-4">
+                            <div class="card text-center">
+                                <div class="card-body">
+                                    <h6 class="card-title text-muted">Total Usuarios</h6>
+                                    <p class="display-6" id="statTotalUsuarios">-</p>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+                </section>
+
+                <!-- Ollas Section -->
+                <section id="ollasSection" class="content-section" style="display: none;">
+                    <div class="d-flex justify-content-between align-items-center mb-4">
+                        <h2>Mis Ollas Comunes</h2>
+                        <button class="btn btn-primary" data-bs-toggle="modal" data-bs-target="#ollaModal">
+                            + Nueva Olla
+                        </button>
+                    </div>
+                    <div id="ollasListContainer" class="row"></div>
+                </section>
+
+                <!-- Donaciones Section -->
+                <section id="donacionesSection" class="content-section" style="display: none;">
+                    <h2 class="mb-4">Mis Donaciones</h2>
+                    <div id="donacionesListContainer" class="table-responsive">
+                        <table class="table">
+                            <thead>
+                                <tr>
+                                    <th>Olla</th>
+                                    <th>Recurso</th>
+                                    <th>Cantidad</th>
+                                    <th>Estado</th>
+                                    <th>Fecha</th>
+                                </tr>
+                            </thead>
+                            <tbody id="donacionesTableBody">
+                            </tbody>
+                        </table>
+                    </div>
+                </section>
+
+                <!-- Solicitudes Section -->
+                <section id="solicitudesSection" class="content-section" style="display: none;">
+                    <div class="d-flex justify-content-between align-items-center mb-4">
+                        <h2>Solicitudes de Recursos</h2>
+                        <button class="btn btn-primary" data-bs-toggle="modal" data-bs-target="#solicitudModal">
+                            + Nueva Solicitud
+                        </button>
+                    </div>
+                    <div id="solicitudesListContainer" class="table-responsive">
+                        <table class="table">
+                            <thead>
+                                <tr>
+                                    <th>Recurso</th>
+                                    <th>Cantidad</th>
+                                    <th>Urgencia</th>
+                                    <th>Estado</th>
+                                    <th>Fecha</th>
+                                </tr>
+                            </thead>
+                            <tbody id="solicitudesTableBody">
+                            </tbody>
+                        </table>
+                    </div>
+                </section>
+
+                <!-- Gestion Uusarios -->
+                <section id="gestionUsuariosSection" class="content-section" style="display: none;">
+                    <div class="d-flex justify-content-between align-items-center mb-4">
+                        <h2>Gestión de Usuarios</h2>
+                        <button class="btn btn-primary" onclick="abrirModalUsuario()">+ Agregar Usuario</button>
+                    </div>
+                    
+                    <div class="card p-3">
+                        <input type="text" id="buscarUsuario" class="form-control mb-3" placeholder="Buscar por nombre...">
+                        <table class="table table-hover">
+                            <thead>
+                                <tr>
+                                    <th>Nombre</th>
+                                    <th>Email</th>
+                                    <th>Rol</th>
+                                    <th>Estado</th>
+                                    <th>Acciones</th>
+                                </tr>
+                            </thead>
+                            <tbody id="usuariosTableBody">
+                                <!-- Aquí JS insertará tus filas -->
+                            </tbody>
+                        </table>
+                    </div>
+                </section>
+
+                <!-- Usuario Modal -->
+                <div class="modal fade" id="usuarioModal" tabindex="-1">
+                    <div class="modal-dialog modal-lg">
+                        <div class="modal-content">
+                            <div class="modal-header">
+                                <h5 class="modal-title" id="usuarioModalTitle">Agregar Usuario</h5>
+                                <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Cerrar"></button>
+                            </div>
+                            <div class="modal-body">
+                                <form id="usuarioForm">
+                                    <input type="hidden" id="usuarioId">
+                                    <div class="row gx-3">
+                                        <div class="col-md-6 mb-3">
+                                            <label for="usuarioNombre" class="form-label">Nombre *</label>
+                                            <input type="text" class="form-control" id="usuarioNombre" required>
+                                        </div>
+                                        <div class="col-md-6 mb-3">
+                                            <label for="usuarioEmail" class="form-label">Email *</label>
+                                            <input type="email" class="form-control" id="usuarioEmail" required>
+                                        </div>
+                                        <div class="col-md-6 mb-3">
+                                            <label for="usuarioRol" class="form-label">Rol *</label>
+                                            <select class="form-select" id="usuarioRol" required>
+                                                <option value="donador">Donador</option>
+                                                <option value="olla_comun">Olla Común</option>
+                                                <option value="admin">Admin</option>
+                                            </select>
+                                        </div>
+                                        <div class="col-md-6 mb-3">
+                                            <label for="usuarioTelefono" class="form-label">Teléfono</label>
+                                            <input type="text" class="form-control" id="usuarioTelefono">
+                                        </div>
+                                        <div class="col-md-6 mb-3">
+                                            <label for="usuarioActivo" class="form-label d-block">Estado</label>
+                                            <div class="form-check form-switch">
+                                                <input class="form-check-input" type="checkbox" id="usuarioActivo" checked>
+                                                <label class="form-check-label" for="usuarioActivo">Activo</label>
+                                            </div>
+                                        </div>
+                                        <div class="col-md-6 mb-3">
+                                            <label for="usuarioPassword" class="form-label">Contraseña</label>
+                                            <input type="password" class="form-control" id="usuarioPassword" placeholder="Dejar vacío para no cambiar">
+                                        </div>
+                                    </div>
+                                </form>
+                            </div>
+                            <div class="modal-footer">
+                                <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Cancelar</button>
+                                <button type="button" class="btn btn-primary" id="usuarioSubmitBtn" onclick="submitUsuarioForm()">Guardar</button>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+
+                <!-- Admin Section -->
+                <section id="adminSection" class="content-section" style="display: none;">
+                    <h2 class="mb-4">Panel de Administración</h2>
+                    <div class="row mb-4">
+                        <div class="col-md-12">
+                            <h5>Estado de Solicitudes de Registro de Ollas Comunes</h5>
+                            <div id="adminPendingOllas" class="card p-3"></div>
+                        </div>
+                    </div>
+                    <div class="row mb-4">
+                        <div class="col-md-6">
+                            <h5>Donaciones Pendientes de Aprobación</h5>
+                            <div id="adminDonacionesContainer" class="list-group"></div>
+                        </div>
+                        <div class="col-md-6">
+                            <h5>Solicitudes Pendientes</h5>
+                            <div id="adminSolicitudesContainer" class="list-group"></div>
+                        </div>
+                    </div>
+                </section>
+
+                <!-- Profile Section -->
+                <section id="profileSection" class="content-section" style="display: none;">
+                    <h2 class="mb-4">Mi Perfil</h2>
+                    <div class="card">
+                        <div class="card-body">
+                            <div class="mb-3">
+                                <label class="form-label">Email</label>
+                                <input type="text" class="form-control" id="profileEmail" disabled>
+                            </div>
+                            <div class="mb-3">
+                                <label class="form-label">Nombre</label>
+                                <input type="text" class="form-control" id="profileNombre" disabled>
+                            </div>
+                            <div class="mb-3">
+                                <label class="form-label">Rol</label>
+                                <input type="text" class="form-control" id="profileRole" disabled>
+                            </div>
+                            <div class="mb-3">
+                                <label class="form-label">Teléfono</label>
+                                <input type="text" class="form-control" id="profileTelefono" disabled>
+                            </div>
+                            <div id="profileChartsContainer" class="mt-4"></div>
+                        </div>
+                    </div>
+                </section>
+        </main>
+    </div>
+
+    <!-- Modals -->
+    <!-- Olla Modal -->
+    <div class="modal fade" id="ollaModal" tabindex="-1">
+        <div class="modal-dialog">
+            <div class="modal-content">
+                <div class="modal-header">
+                    <h5 class="modal-title">Nueva Olla Común</h5>
+                    <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Cerrar"></button>
+                </div>
+                <div class="modal-body">
+                    <form id="ollaForm">
+                        <div class="mb-3">
+                            <label for="ollaNombre" class="form-label">Nombre *</label>
+                            <input type="text" class="form-control" id="ollaNombre" required>
+                        </div>
+                        <div class="mb-3">
+                            <label for="ollaDireccion" class="form-label">Dirección *</label>
+                            <input type="text" class="form-control" id="ollaDireccion" required>
+                        </div>
+                        <div class="mb-3">
+                            <label for="ollaTelefono" class="form-label">Teléfono</label>
+                            <input type="tel" class="form-control" id="ollaTelefono">
+                        </div>
+                        <div class="mb-3">
+                            <label for="ollaDescripcion" class="form-label">Descripción</label>
+                            <textarea class="form-control" id="ollaDescripcion" rows="3"></textarea>
+                        </div>
+                    </form>
+                </div>
+                <div class="modal-footer">
+                    <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Cancelar</button>
+                    <button type="button" class="btn btn-primary" id="submitOllaBtn">Crear</button>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- Solicitud Modal -->
+    <div class="modal fade" id="solicitudModal" tabindex="-1">
+        <div class="modal-dialog">
+            <div class="modal-content">
+                <div class="modal-header">
+                    <h5 class="modal-title">Nueva Solicitud de Recurso</h5>
+                    <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Cerrar"></button>
+                </div>
+                <div class="modal-body">
+                    <form id="solicitudForm">
+                        <div class="mb-3">
+                            <label for="solicitudOllaId" class="form-label">Olla Común *</label>
+                            <select class="form-select" id="solicitudOllaId" required>
+                                <option value="">-- Selecciona una olla --</option>
+                            </select>
+                        </div>
+                        <div class="mb-3">
+                            <label for="solicitudTipo" class="form-label">Tipo de Recurso *</label>
+                            <select class="form-select" id="solicitudTipo" required>
+                                <option value="">-- Selecciona --</option>
+                                <option value="alimentos">Alimentos</option>
+                                <option value="medicinas">Medicinas</option>
+                                <option value="ropa">Ropa</option>
+                                <option value="utensilios">Utensilios</option>
+                            </select>
+                        </div>
+                        <div class="mb-3">
+                            <label for="solicitudCantidad" class="form-label">Cantidad *</label>
+                            <input type="number" class="form-control" id="solicitudCantidad" min="0.1" step="0.1" required>
+                        </div>
+                        <div class="mb-3">
+                            <label for="solicitudUrgencia" class="form-label">Urgencia</label>
+                            <select class="form-select" id="solicitudUrgencia">
+                                <option value="normal">Normal</option>
+                                <option value="alta">Alta</option>
+                                <option value="critica">Crítica</option>
+                            </select>
+                        </div>
+                        <div class="mb-3">
+                            <label for="solicitudDescripcion" class="form-label">Descripción</label>
+                            <textarea class="form-control" id="solicitudDescripcion" rows="3"></textarea>
+                        </div>
+                    </form>
+                </div>
+                <div class="modal-footer">
+                    <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Cancelar</button>
+                    <button type="button" class="btn btn-primary" id="submitSolicitudBtn">Crear</button>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/js/bootstrap.bundle.min.js"></script>
+    <script src="js/api.js"></script>
+    <script src="js/nav.js"></script>
+    <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
+    <script src="js/charts.js"></script>
+    <script src="js/dashboard.js"></script>
+    <script src="js/usuarios.js"></script>
+</body>
+</html>
