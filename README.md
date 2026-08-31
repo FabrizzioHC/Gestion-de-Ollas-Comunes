@@ -19,9 +19,9 @@ Una plataforma web que conecta donadores con ollas comunes para asegurar que los
 ### Backend
 - **Framework**: Flask 3.0.0
 - **Autenticación**: JWT (Flask-JWT-Extended 4.5.3)
-- **Base de Datos**: SQLite
-- **Lenguaje**: Python 3.8+
-- **ORM**: Nativo con SQLite3
+- Base de Datos: MySQL
+- Lenguaje: Python 3.8+
+- ORM: Nativo con PyMySQL
 
 ### Frontend
 - **Markup**: HTML5 Semántico
@@ -38,14 +38,13 @@ red-comunitaria/
 │   ├── app.py                      # Aplicación Flask principal
 │   ├── config.py                   # Configuración (Dev/Prod)
 │   ├── requirements.txt            # Dependencias Python
-│   ├── redcomunitaria.db           # Base de datos SQLite
 │   ├── domain/
 │   │   ├── models.py              # Entidades de dominio
 │   │   ├── repositories.py        # Interfaces de repositorio
 │   │   └── services.py            # Servicios de negocio
 │   └── infrastructure/
-│       ├── database.py            # Gestión de BD
-│       └── repositories.py        # Implementación de repositorios SQLite
+│       ├── database.py            # Gestión de conexión MySQL
+│       └── repositories.py        # Implementación de repositorios MySQL
 │
 └── frontend/
     ├── index.html                 # Landing page
@@ -96,7 +95,16 @@ pip install -r requirements.txt
 python app.py
 ```
 
-El backend estará disponible en `http://localhost:5000`
+5. Configura la base de datos MySQL:
+```bash
+- Abre tu gestor MySQL (XAMPP, Workbench, etc.)
+- Ejecuta: CREATE DATABASE redcomunitaria;
+```
+
+6. Ejecuta la aplicación Flask:
+```bash
+python app.py
+```
 
 ### Frontend - Instalación
 
