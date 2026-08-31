@@ -1,93 +1,92 @@
-"""Script sencillo para poblar la base de datos con datos de ejemplo.
-
-Ejecutar: python backend/seed.py
 """
-from werkzeug.security import generate_password_hash
+Script para poblar la base de datos MySQL con información de prueba.
+"""
 from infrastructure.database import Database
-from infrastructure.repositories import (
-    SQLiteUserRepository, SQLiteOllaComunRepository, SQLiteDonacionRepository
-)
-from domain.models import User, OllaComun, Donacion
+from werkzeug.security import generate_password_hash
+import pymysql
 
-def seed(db_path='redcomunitaria.db'):
-    db = Database(db_path=db_path)
-    user_repo = SQLiteUserRepository(db)
-    olla_repo = SQLiteOllaComunRepository(db)
-    don_repo = SQLiteDonacionRepository(db)
+def seed_database():
+    db = Database()
+    
+    with db.get_cursor() as cursor:
+        print("Iniciando la inserción de datos de prueba...")
+        
+        # 1. Insertar 5 Usuarios Donadores adicionales
+        donadores = [
+            ('juan@gmail.com', 'abc123$', 'Juan Pérez', 'donador', '987654321', '76543210'),
+            ('maria@gmail.com', 'abc123$', 'María Gómez', 'donador', '912345678', '87654321'),
+            ('carlos@gmail.com', 'abc123$', 'Carlos Ruiz', 'donador', '923456789', '12345678'),
+            ('ana@gmail.com', 'abc123$', 'Ana Torres', 'donador', '934567890', '23456789'),
+            ('luis@gmail.com', 'abc123$', 'Luis Flores', 'donador', '945678901', '34567890')
+        ]
+        
+        for email, pwd, nombre, rol, tel, dni in donadores:
+            try:
+                hashed_pwd = generate_password_hash(pwd)
+                cursor.execute(
+                    "INSERT INTO users (email, password, nombre, role, telefono, dni) VALUES (%s, %s, %s, %s, %s, %s)",
+                    (email, hashed_pwd, nombre, rol, tel, dni)
+                )
+            except pymysql.err.IntegrityError:
+                pass # El usuario ya existe
+                
+        # 2. Insertar 10 Ollas Comunes (Asociadas al usuario olla@gmail.com que tiene id=3)
+        ollas = [
+            ('Olla Común Esperanza', 3, 'Atención a 50 familias', 'Av. Próceres de la Independencia 1234, SJL', '999111222', 50),
+            ('Olla Fe y Alegría', 3, 'Comedor del sector', 'Quebrada Canto Grande Mz A Lt 5, SJL', '999222333', 80),
+            ('Olla Las Mercedes', 3, 'Desayunos y almuerzos', 'Campoy Calle 4, SJL', '999333444', 45),
+            ('Olla Solidaria Huáscar', 3, 'Apoyo a madres solteras', 'AA.HH Huáscar Grupo 2, SJL', '999444555', 60),
+            ('Olla Mangomarca', 3, 'Comidas nutritivas', 'Mangomarca Baja Mz B, SJL', '999555666', 40),
+            ('Olla Zárate Unido', 3, 'Almuerzos solidarios', 'Zárate Av. Gran Chimú 456, SJL', '999666777', 75),
+            ('Olla Corazón de Jesús', 3, 'Atención niños y ancianos', 'Jicamarca Sector Sur, SJL', '999777888', 55),
+            ('Olla 10 de Octubre', 3, 'Comedor vecinal', '10 de Octubre 3ra etapa, SJL', '999888999', 90),
+            ('Olla Santa María', 3, 'Raciones diarias', 'Mariscal Cáceres Mz D, SJL', '999123123', 65),
+            ('Olla Virgen del Carmen', 3, 'Alimentación comunitaria', 'Bayóvar Sector 2, SJL', '999321321', 70)
+        ]
+        
+        cursor.execute("SELECT count(*) as count FROM ollas_comunes")
+        if cursor.fetchone()['count'] == 0:
+            for n, uid, desc, dir, tel, ben in ollas:
+                cursor.execute(
+                    "INSERT INTO ollas_comunes (nombre, usuario_id, descripcion, direccion, telefono, beneficiarios_atendidos) VALUES (%s, %s, %s, %s, %s, %s)",
+                    (n, uid, desc, dir, tel, ben)
+                )
 
-    # Crear usuarios de ejemplo
-    try:
-        admin = User(email='admin@example.com', password=generate_password_hash('admin123'), nombre='Admin', role='admin')
-        admin_id = user_repo.create(admin)
-    except Exception:
-        admin_id = None
+        # 3. Insertar 5 Donaciones (Por el usuario donador@gmail.com con ID 2)
+        donaciones = [
+            (2, 1, 'Alimentos', 50.0, 'kg', 'Sacos de arroz y azúcar', 'aprobada'),
+            (2, 2, 'Vegetales', 20.0, 'kg', 'Papas y cebollas', 'aprobada'),
+            (2, 3, 'Insumos', 15.0, 'litros', 'Aceite vegetal', 'pendiente'),
+            (2, 4, 'Proteínas', 10.0, 'kg', 'Pollo y conservas de atún', 'pendiente'),
+            (2, 5, 'Menestras', 25.0, 'kg', 'Lentejas y frijoles', 'rechazada')
+        ]
+        
+        cursor.execute("SELECT count(*) as count FROM donaciones")
+        if cursor.fetchone()['count'] == 0:
+            for did, oid, tipo, cant, uni, desc, est in donaciones:
+                cursor.execute(
+                    "INSERT INTO donaciones (donador_id, olla_comun_id, tipo_recurso, cantidad, unidad, descripcion, estado) VALUES (%s, %s, %s, %s, %s, %s, %s)",
+                    (did, oid, tipo, cant, uni, desc, est)
+                )
 
-    try:
-        donador = User(email='donador@example.com', password=generate_password_hash('donor123'), nombre='Juan Donante', role='donador')
-        donador_id = user_repo.create(donador)
-    except Exception:
-        # intentar obtener existente
-        existing = user_repo.find_by_email('donador@example.com')
-        donador_id = existing.id if existing else None
+        # 4. Insertar 5 Solicitudes
+        solicitudes = [
+            (1, 'Agua potable', 100.0, 'litros', 'Necesitamos agua para cocinar', 'crítica', 'pendiente'),
+            (2, 'Gas', 1.0, 'balón', 'Balón de gas de 10kg', 'alta', 'aprobada'),
+            (3, 'Carnes', 15.0, 'kg', 'Menudencia o pollo', 'normal', 'pendiente'),
+            (4, 'Verduras', 20.0, 'kg', 'Zanahoria, tomate, zapallo', 'normal', 'completada'),
+            (5, 'Menestras', 10.0, 'kg', 'Arvejas o pallares', 'alta', 'pendiente')
+        ]
+        
+        cursor.execute("SELECT count(*) as count FROM solicitudes_recursos")
+        if cursor.fetchone()['count'] == 0:
+            for oid, tipo, cant, uni, desc, urg, est in solicitudes:
+                cursor.execute(
+                    "INSERT INTO solicitudes_recursos (olla_comun_id, tipo_recurso, cantidad, unidad, descripcion, urgencia, estado) VALUES (%s, %s, %s, %s, %s, %s, %s)",
+                    (oid, tipo, cant, uni, desc, urg, est)
+                )
 
-    # ensure there's a user to assign as propietario de las ollas
-    owner_id = None
-    if admin_id:
-        owner_id = admin_id
-    elif donador_id:
-        owner_id = donador_id
-    else:
-        try:
-            olla_owner = User(email='olla_owner@example.com', password=generate_password_hash('owner123'), nombre='Owner Olla', role='olla_comun')
-            owner_id = user_repo.create(olla_owner)
-        except Exception:
-            existing = user_repo.find_by_email('olla_owner@example.com')
-            owner_id = existing.id if existing else None
-
-    # Crear algunas ollas de ejemplo con distritos de Lima y necesidades típicas
-    samples = [
-        ('Olla Común Los Jardines', 'Apoyo alimentario y productos de higiene', 'San Juan de Lurigancho', 120, ['arroz','aceite','leche']),
-        ('Olla Común Villa María', 'Raciones diarias y asistencia', 'Villa María del Triunfo', 85, ['arroz','menestras','fideos']),
-        ('Olla Común Esperanza', 'Sopa solidaria y leche para niños', 'San Juan de Miraflores', 150, ['leche','sopa','pan']),
-        ('Olla Común Unión y Fuerza', 'Apoyo familiar', 'Ate Vitarte', 95, ['arroz','aceite','verduras']),
-        ('Olla Común Corazón de Pueblo', 'Raciones para adultos mayores', 'Comas', 70, ['menestras','aceite','azúcar']),
-        ('Olla Común Manos Solidarias', 'Alimentos y abrigo', 'San Martín de Porres', 60, ['ropa','manta','alimentos']),
-        ('Olla Común Barrio Unido', 'Asistencia interdisciplinaria', 'Los Olivos', 110, ['arroz','fideos','aceite'])
-    ]
-
-    created_ids = []
-    for nombre, descripcion, direccion, beneficiarios, necesidades in samples:
-        try:
-            olla = OllaComun(
-                nombre=nombre,
-                descripcion=descripcion + ' - Necesidades: ' + ', '.join(necesidades),
-                direccion=direccion,
-                beneficiarios_atendidos=beneficiarios,
-                usuario_id=owner_id
-            )
-            oid = olla_repo.create(olla)
-            created_ids.append(oid)
-        except Exception:
-            pass
-
-    # Crear donaciones de ejemplo
-    sample_donaciones = [
-        (donador_id, created_ids[0] if created_ids else None, 'arroz', 50, 'kg', 'Arroz para familias'),
-        (donador_id, created_ids[1] if len(created_ids)>1 else None, 'aceite', 20, 'l', 'Aceite comestible'),
-        (donador_id, created_ids[2] if len(created_ids)>2 else None, 'menestras', 30, 'kg', 'Lentejas y pallares')
-    ]
-
-    for d in sample_donaciones:
-        try:
-            donador_for = d[0] or donador_id or owner_id
-            olla_for = d[1]
-            if olla_for and donador_for:
-                don = Donacion(donador_id=donador_for, olla_comun_id=olla_for, tipo_recurso=d[2], cantidad=d[3], unidad=d[4], descripcion=d[5])
-                don_repo.create(don)
-        except Exception:
-            pass
-
-    print('Seed complete. Created ollas:', created_ids)
+        print("¡Datos de prueba insertados exitosamente en MySQL!")
 
 if __name__ == '__main__':
-    seed()
+    seed_database()

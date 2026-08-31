@@ -18,7 +18,6 @@ from infrastructure.repositories import (
 from domain.services import (
     AuthService, OllaComunService, DonacionService, SolicitudRecursoService
 )
-import seed as seed_module
 
 # Inicialización
 app = Flask(__name__)
@@ -27,7 +26,7 @@ CORS(app, resources={r"/api/*": {"origins": "*"}}, allow_headers=["Content-Type"
 jwt = JWTManager(app)
 
 # Base de datos
-db = Database(db_path='redcomunitaria.db')
+db = Database()
 
 # Repositorios
 user_repo = SQLiteUserRepository(db)
@@ -516,14 +515,6 @@ def health():
 
 
 if __name__ == '__main__':
-    # Auto-seed DB if no ollas exist
-    try:
-        existing = olla_repo.find_all()
-        if not existing:
-            print('No ollas found, seeding database with sample data...')
-            seed_module.seed(db_path='redcomunitaria.db')
-    except Exception as e:
-        print('Seed check failed:', e)
 
     app.run(debug=True, host='0.0.0.0', port=5000)
 
