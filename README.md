@@ -19,9 +19,9 @@ Una plataforma web que conecta donadores con ollas comunes para asegurar que los
 ### Backend
 - **Framework**: Flask 3.0.0
 - **Autenticación**: JWT (Flask-JWT-Extended 4.5.3)
-- **Base de Datos**: SQLite
+- **Base de Datos**: MySQL
 - **Lenguaje**: Python 3.8+
-- **ORM**: Nativo con SQLite3
+- **ORM**: Nativo con PyMySQL
 
 ### Frontend
 - **Markup**: HTML5 Semántico
@@ -32,20 +32,20 @@ Una plataforma web que conecta donadores con ollas comunes para asegurar que los
 
 ## 📁 Estructura del Proyecto
 
-```
+```text
 red-comunitaria/
 ├── backend/
 │   ├── app.py                      # Aplicación Flask principal
+│   ├── seed.py                     # Script para inyectar datos de prueba en MySQL
 │   ├── config.py                   # Configuración (Dev/Prod)
 │   ├── requirements.txt            # Dependencias Python
-│   ├── redcomunitaria.db           # Base de datos SQLite
 │   ├── domain/
 │   │   ├── models.py              # Entidades de dominio
 │   │   ├── repositories.py        # Interfaces de repositorio
 │   │   └── services.py            # Servicios de negocio
 │   └── infrastructure/
-│       ├── database.py            # Gestión de BD
-│       └── repositories.py        # Implementación de repositorios SQLite
+│       ├── database.py            # Gestión de conexión MySQL
+│       └── repositories.py        # Implementación de repositorios MySQL
 │
 └── frontend/
     ├── index.html                 # Landing page
@@ -55,70 +55,79 @@ red-comunitaria/
     ├── ollas.html                 # Listado de ollas
     ├── donar.html                 # Formulario de donación
     ├── css/
-    │   └── styles.css            # Estilos principales (455 líneas)
+    │   └── styles.css            # Estilos principales
     └── js/
         ├── api.js                # Cliente API HTTP
-        ├── auth.js               # Lógica de autenticación
-        ├── register.js           # Lógica de registro
-        ├── dashboard.js          # Lógica del dashboard
-        ├── ollas.js              # Lógica de ollas
-        ├── donar.js              # Lógica de donaciones
         └── main.js               # Utilidades globales
 ```
 
 ## ⚡ Instalación y Setup
-
-### Prerrequisitos
+### Prerrequisitos:
 - Python 3.8+
-- pip (gestor de paquetes de Python)
+- MySQL Server (XAMPP, MySQL Workbench, etc.)
 - Navegador web moderno (Chrome, Firefox, Safari, Edge)
 
 ### Backend - Instalación
-
 1. Navega a la carpeta del backend:
-```bash
+```
 cd backend
 ```
 
-2. Crea un entorno virtual (recomendado):
-```bash
-
-source venv/bin/activate  # En Windows: venv\Scripts\activate
+2. Crea y activa un entorno virtual (recomendado):
+```
+python -m venv venv
+source venv/bin/activate  # En Windows: .\venv\Scripts\activate
 ```
 
 3. Instala las dependencias:
-```bash
+```
 pip install -r requirements.txt
 ```
 
-4. Ejecuta la aplicación Flask:
-```bash
+### Configura la base de datos MySQL:
+
+## Abre tu gestor MySQL.
+
+4. Ejecuta el siguiente comando para crear la base de datos vacía:
+```
+CREATE DATABASE redcomunitaria;
+```
+
+5. Ejecuta la aplicación Flask (esto creará las tablas automáticamente):
+```
 python app.py
 ```
 
-El backend estará disponible en `http://localhost:5000`
+6. (Opcional) Abre una nueva terminal, activa el entorno virtual e inyecta datos de prueba: (Para agregar datos randoms)
+```
+python seed.py
+```
 
 ### Frontend - Instalación
 
 1. Abre una terminal en la carpeta del frontend
-
+   
 2. Inicia un servidor HTTP simple:
 ```bash
 # Con Python 3
 python -m http.server 8000
-
 # Con Python 2
 python -m SimpleHTTPServer 8000
-
 # O con Node.js (si lo tienes instalado)
 npx http-server -p 8000
 ```
 
+
+
 3. Abre el navegador en `http://localhost:8000`
+
+
 
 ## 👤 Credenciales de Prueba
 
+
 Estas credenciales están preinstaladas en la base de datos:
+
 
 ### Administrador
 - **Email**: admin@redcomunitaria.com
@@ -126,9 +135,12 @@ Estas credenciales están preinstaladas en la base de datos:
 - **Acceso**: Dashboard completo, aprobación de donaciones/solicitudes
 
 ### Donador
+
 - **Email**: donador@gmail.com
 - **Contraseña**: abc123$
 - **Acceso**: Registrar y seguir donaciones
+
+
 
 ### Olla Común
 - **Email**: olla@gmail.com
@@ -169,6 +181,7 @@ Estas credenciales están preinstaladas en la base de datos:
 5. Enviar solicitud
 6. El admin la aprobará
 
+
 ### 5. Admin - Aprobar Solicitudes
 1. Iniciar sesión como admin
 2. Ir a "Administración" en el menú
@@ -178,17 +191,20 @@ Estas credenciales están preinstaladas en la base de datos:
 
 ## 📡 API Endpoints
 
+
 ### Autenticación
+
 - `POST /api/auth/login` - Iniciar sesión
   - Body: `{ email, password }`
   - Retorna: JWT access_token + user data
-  
+
 - `POST /api/auth/register` - Registrar nuevo usuario
   - Body: `{ email, password, nombre, role, telefono }`
   - Retorna: user_id
-  
+
 - `GET /api/auth/profile` - Obtener perfil (requiere auth)
   - Retorna: datos del usuario autenticado
+
 
 ### Ollas Comunes
 - `GET /api/ollas` - Listar todas las ollas
@@ -209,26 +225,30 @@ Estas credenciales están preinstaladas en la base de datos:
 - `POST /api/solicitudes` - Crear solicitud (requiere role=olla_comun)
 - `POST /api/solicitudes/<id>/approve` - Aprobar (requiere role=admin)
 
+
 ### Admin
 - `GET /api/admin/dashboard` - Estadísticas (requiere role=admin)
-  - Retorna: total_usuarios, ollas_activas, donaciones_pendientes, solicitudes_pendientes
+- Retorna: total_usuarios, ollas_activas, donaciones_pendientes, solicitudes_pendientes
 
 ## 🗄️ Base de Datos
 
-SQLite con 5 tablas principales:
+###My SQL con 5 tablas principales:
 
 ### users
+
 ```sql
 id, email, password (hashed), nombre, role, telefono, activo, fecha_creacion
 ```
 
 ### ollas_comunes
+
 ```sql
 id, nombre, usuario_id, descripcion, direccion, telefono, 
 beneficiarios_atendidos, estado (activa/pausada/inactiva), fecha_creacion
 ```
 
 ### donaciones
+
 ```sql
 id, donador_id, olla_comun_id, tipo_recurso, cantidad, unidad,
 descripcion, estado (pendiente/aprobada/entregada/rechazada), 
@@ -249,13 +269,13 @@ fecha_entrega, observaciones
 ```
 
 ## 🔒 Seguridad
-
 - **Contraseñas**: Hashed con Werkzeug usando SHA256
 - **Autenticación**: JWT con expiración de 24 horas
 - **Autorización**: Validación de roles por endpoint
 - **CORS**: Habilitado para desarrollo
 - **Validación**: Input validation en frontend y backend
 - **Sesiones**: Basadas en JWT (stateless)
+
 
 ## 📱 Características del Diseño
 
@@ -272,10 +292,12 @@ fecha_entrega, observaciones
 - Warning: #ffc107
 - Danger: #dc3545
 
+
 ### Tipografía
 - Font principal: Segoe UI, Tahoma, Geneva, Verdana
 - Heading: Pesos 700-800
 - Body: Peso 400, line-height 1.6
+
 
 ## 🚀 Deploy a Producción
 
@@ -320,6 +342,8 @@ gunicorn -w 4 -b 0.0.0.0:5000 app:app
 - El token expira después de 24 horas
 - Usuario debe volver a iniciar sesión
 
+
+
 ### Base de datos no se inicializa
 - Elimina `backend/redcomunitaria.db`
 - Reinicia el backend para regenerarla con usuarios por defecto
@@ -327,6 +351,7 @@ gunicorn -w 4 -b 0.0.0.0:5000 app:app
 ## 📚 Estructura del Código Backend (Arquitectura Hexagonal)
 
 ### Domain Layer (Dominio)
+
 - `models.py`: Entidades puras sin dependencias
 - `repositories.py`: Interfaces (contratos)
 - `services.py`: Lógica de negocio pura
@@ -338,6 +363,7 @@ gunicorn -w 4 -b 0.0.0.0:5000 app:app
 ### Interface Layer (Interfaces)
 - `app.py`: Endpoints Flask REST
 
+
 ## 🔗 Integración Frontend-Backend
 
 El cliente API (`frontend/js/api.js`) maneja:
@@ -347,7 +373,6 @@ El cliente API (`frontend/js/api.js`) maneja:
 - Gestión de tokens en localStorage
 
 ## 📋 Tipos de Usuarios y Permisos
-
 | Acción | Admin | Donador | Olla Común |
 |--------|-------|---------|-----------|
 | Ver ollas | ✓ | ✓ | ✓ |
@@ -358,6 +383,8 @@ El cliente API (`frontend/js/api.js`) maneja:
 | Aprobar solicitud | ✓ | ✗ | ✗ |
 | Ver dashboard admin | ✓ | ✗ | ✗ |
 
+
+
 ## 📞 Soporte
 
 Para reportar bugs o sugerencias, crea un issue en el repositorio.
@@ -366,4 +393,4 @@ Para reportar bugs o sugerencias, crea un issue en el repositorio.
 
 **Versión**: 1.0.0  
 **Última actualización**: Junio 2024  
-**Licencia**: MIT
+**Licencia**: MIT 
