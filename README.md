@@ -61,13 +61,13 @@ red-comunitaria/
         └── main.js               # Utilidades globales
 ```
 
-##⚡ Instalación y Setup
-###Prerrequisitos:
+## ⚡ Instalación y Setup
+### Prerrequisitos:
 - Python 3.8+
 - MySQL Server (XAMPP, MySQL Workbench, etc.)
 - Navegador web moderno (Chrome, Firefox, Safari, Edge)
 
-###Backend - Instalación
+### Backend - Instalación
 1. Navega a la carpeta del backend:
 ```
 cd backend
@@ -84,9 +84,9 @@ source venv/bin/activate  # En Windows: .\venv\Scripts\activate
 pip install -r requirements.txt
 ```
 
-###Configura la base de datos MySQL:
+### Configura la base de datos MySQL:
 
-##Abre tu gestor MySQL.
+## Abre tu gestor MySQL.
 
 4. Ejecuta el siguiente comando para crear la base de datos vacía:
 ```
@@ -105,32 +105,16 @@ python seed.py
 
 ### Frontend - Instalación
 
-
-
 1. Abre una terminal en la carpeta del frontend
-
-
-
+   
 2. Inicia un servidor HTTP simple:
-
 ```bash
-
 # Con Python 3
-
 python -m http.server 8000
-
-
-
 # Con Python 2
-
 python -m SimpleHTTPServer 8000
-
-
-
 # O con Node.js (si lo tienes instalado)
-
 npx http-server -p 8000
-
 ```
 
 
