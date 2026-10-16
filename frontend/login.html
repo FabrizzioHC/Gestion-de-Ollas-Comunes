@@ -1,0 +1,75 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Iniciar Sesión - Red Comunitaria</title>
+    <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/css/bootstrap.min.css" rel="stylesheet">
+    <link rel="stylesheet" href="css/styles.css">
+</head>
+<body class="login-page">
+    <nav class="navbar navbar-expand-lg navbar-transparent py-3">
+        <div class="container">
+            <a class="navbar-brand fw-bold text-white" href="index.html">
+                <span class="logo-icon">❤️</span>
+                <span class="text-white">Red</span>Comunitaria
+            </a>
+            <button class="navbar-toggler" type="button" data-bs-toggle="collapse" data-bs-target="#navbarNav">
+                <span class="navbar-toggler-icon"></span>
+            </button>
+            <div class="collapse navbar-collapse" id="navbarNav">
+                <ul class="navbar-nav ms-auto align-items-center">
+                    <li class="nav-item d-flex align-items-center gap-2">
+                        <button id="themeToggle" class="btn btn-outline-light btn-sm" type="button">☀️ Modo claro</button>
+                        <a class="btn btn-outline-light btn-sm" href="register.html">Registro</a>
+                    </li>
+                </ul>
+            </div>
+        </div>
+    </nav>
+
+    <main class="login-container container-fluid">
+        <div class="row justify-content-center align-items-center min-vh-100">
+            <div class="col-lg-5 col-xl-4">
+                <div class="login-card card shadow-lg rounded-4 p-4 p-md-5">
+                    <div class="text-center mb-4">
+                        <div class="login-logo mb-3">❤️</div>
+                        <h1 class="h4 fw-bold mb-2">Bienvenido a RedComunitaria</h1>
+                        <p class="text-muted mb-0">Inicia sesión con tu correo y contraseña.</p>
+                    </div>
+
+                    <form id="loginForm">
+                        <div class="mb-3 form-floating">
+                            <input type="email" class="form-control" id="email" name="email" placeholder="Correo electrónico" required>
+                            <label for="email">Correo electrónico</label>
+                        </div>
+                        <div class="mb-3 form-floating">
+                            <input type="password" class="form-control" id="password" name="password" placeholder="Contraseña" required>
+                            <label for="password">Contraseña</label>
+                        </div>
+                        <button type="submit" class="btn btn-primary btn-lg w-100 mb-3">Iniciar Sesión</button>
+                    </form>
+
+                    <div id="errorAlert" class="alert alert-danger d-none" role="alert"></div>
+
+                    <p class="text-center text-muted mb-0">¿No tienes cuenta? <a href="register.html" class="text-primary">Regístrate aquí</a></p>
+                </div>
+            </div>
+        </div>
+    </main>
+
+    <div id="splashOverlay" class="splash-overlay d-none">
+        <div class="splash-card text-center rounded-5 p-5 shadow-lg bg-white bg-opacity-95">
+            <div class="splash-logo mb-4">❤️</div>
+            <h2 class="mb-3">Bienvenido <span class="splash-username"></span></h2>
+            <p class="text-muted mb-4">Conectando solidaridad y recursos en RedComunitaria.</p>
+            <div class="spinner-border text-primary" role="status"><span class="visually-hidden">Cargando...</span></div>
+        </div>
+    </div>
+
+    <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/js/bootstrap.bundle.min.js"></script>
+    <script src="js/api.js"></script>
+    <script src="js/nav.js"></script>
+    <script src="js/auth.js"></script>
+</body>
+</html>
