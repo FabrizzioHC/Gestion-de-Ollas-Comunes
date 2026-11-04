@@ -29,6 +29,8 @@ CREATE TABLE Usuario (
     telefono VARCHAR(20),
     dni VARCHAR(15) UNIQUE,
     activo BOOLEAN DEFAULT TRUE,
+    intentos_fallidos INT DEFAULT 0,
+    bloqueado_hasta DATETIME NULL,
     fecha_creacion TIMESTAMP DEFAULT CURRENT_TIMESTAMP
 );
 
