@@ -1,0 +1,284 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>RedComunitaria | Inicio</title>
+    <!-- Bootstrap 5 -->
+    <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/css/bootstrap.min.css" rel="stylesheet">
+    <!-- Nuestro CSS Global conectado con Flask -->
+    <link rel="stylesheet" href="{{ url_for('static', filename='assets/css/style.css') }}">
+    
+    <style>
+        /* Estilos base para complementar tus clases personalizadas */
+        .hero-section {
+            background: linear-gradient(135deg, #1e70e6 0%, #4da3ff 100%);
+            color: white;
+            padding: 80px 0;
+            border-bottom-left-radius: 50px;
+            border-bottom-right-radius: 50px;
+        }
+        .hero-badge {
+            background: rgba(255,255,255,0.2);
+            padding: 5px 15px;
+            border-radius: 20px;
+            font-size: 0.9rem;
+        }
+        .stat-card {
+            background: white;
+            border-radius: 15px;
+            box-shadow: 0 4px 15px rgba(0,0,0,0.1);
+            color: #333;
+            transition: transform 0.3s;
+        }
+        .stat-card:hover { transform: translateY(-5px); }
+        .stat-value { font-size: 2rem; font-weight: bold; color: #1e70e6; }
+        .feature-card {
+            background: white;
+            border: 1px solid #eee;
+            border-radius: 15px;
+            transition: all 0.3s;
+            height: 100%;
+        }
+        .feature-card:hover { box-shadow: 0 10px 20px rgba(0,0,0,0.05); transform: translateY(-5px); }
+        .feature-icon { font-size: 2.5rem; }
+        .cta-section { background-color: #f8f9fa; }
+
+        /* PANTALLA DE CARGA (Fondo borroso y carta) */
+        #welcome-loader {
+            position: fixed;
+            top: 0; left: 0; width: 100%; height: 100%;
+            background-color: rgba(0, 0, 0, 0.4); 
+            backdrop-filter: blur(8px); 
+            -webkit-backdrop-filter: blur(8px);
+            z-index: 9999;
+            display: flex;
+            justify-content: center;
+            align-items: center;
+            transition: opacity 0.5s ease;
+        }
+        
+        .welcome-card {
+            background-color: #ffffff;
+            padding: 3rem 4rem;
+            border-radius: 24px;
+            box-shadow: 0 20px 40px rgba(0,0,0,0.2);
+            text-align: center;
+            transform: scale(0.8);
+            animation: popIn 0.4s cubic-bezier(0.175, 0.885, 0.32, 1.275) forwards;
+        }
+        
+        @keyframes popIn {
+            to { transform: scale(1); }
+        }
+    </style>
+</head>
+<body>
+    
+    <!-- INTERCEPTOR DE MENSAJES (Efecto de Bienvenida en el Index) -->
+    {% with messages = get_flashed_messages(with_categories=true) %}
+        {% if messages %}
+            {% for category, message in messages %}
+                {% if category == 'welcome' %}
+                    <div id="welcome-loader">
+                        <div class="welcome-card">
+                            <div class="spinner-border text-primary mb-3" style="width: 3rem; height: 3rem;" role="status">
+                                <span class="visually-hidden">Cargando...</span>
+                            </div>
+                            <h2 class="fw-bold text-dark mb-2">{{ message }}</h2>
+                            <p class="text-muted fs-5 mb-0">Preparando inicio...</p>
+                        </div>
+                    </div>
+                    <script>
+                        setTimeout(function() {
+                            let loader = document.getElementById('welcome-loader');
+                            if(loader) {
+                                loader.style.opacity = '0';
+                                setTimeout(() => loader.remove(), 500);
+                            }
+                        }, 2000);
+                    </script>
+                {% else %}
+                    <!-- Para mostrar alertas normales en el index (como "Cierre de sesión exitoso") -->
+                    <div class="container mt-3 position-absolute start-50 translate-middle-x" style="z-index: 1050; top: 10px;">
+                        <div class="alert alert-{{ 'success' if category == 'success' else 'danger' }} alert-dismissible fade show shadow-sm" role="alert">
+                            {{ message }}
+                            <button type="button" class="btn-close" data-bs-dismiss="alert"></button>
+                        </div>
+                    </div>
+                {% endif %}
+            {% endfor %}
+        {% endif %}
+    {% endwith %}
+
+    <!-- BARRA DE NAVEGACIÓN -->
+    <nav class="navbar navbar-expand-lg navbar-dark bg-primary py-3">
+        <div class="container">
+            <a class="navbar-brand fw-bold text-white" href="{{ url_for('home') }}">
+                <span class="logo-icon">❤️</span>
+                <span class="text-white">Red</span>Comunitaria
+            </a>
+            <button class="navbar-toggler" type="button" data-bs-toggle="collapse" data-bs-target="#navbarNav" aria-label="Abrir navegación">
+                <span class="navbar-toggler-icon"></span>
+            </button>
+            <div class="collapse navbar-collapse" id="navbarNav">
+                <ul class="navbar-nav ms-auto align-items-center">
+                    <li class="nav-item">
+                        <a class="nav-link text-white" href="{{ url_for('home') }}">Inicio</a>
+                    </li>
+                    <li class="nav-item">
+                        <a id="navOllas" class="nav-link text-white" href="{{ url_for('ollas_publicas_view') }}">Ollas Comunes</a>
+                    </li>
+                    <li class="nav-item">
+                        <a id="navDonar" class="nav-link text-white" href="{{ url_for('donar_view') }}">Donar Ahora</a>
+                    </li>
+                    <li class="nav-item ms-3 d-flex align-items-center gap-2">
+                        
+                        <!-- LÓGICA JINJA2 PARA LOS BOTONES -->
+                        {% if session.get('usuario_id') %}
+                            <!-- Si está logueado -->
+                            <a href="{{ url_for('dashboard_view') }}" class="btn btn-light btn-sm text-primary fw-bold">Mi Perfil</a>
+                            <a href="{{ url_for('usuario.logout') }}" class="btn btn-danger btn-sm ms-2">Cerrar Sesión</a>
+                        {% else %}
+                            <!-- Si es visitante -->
+                            <a href="{{ url_for('usuario.login') }}" class="btn btn-outline-light btn-sm">Iniciar Sesión</a>
+                            <a href="{{ url_for('usuario.registro') }}" class="btn btn-light btn-sm text-primary fw-bold">Registrarse</a>
+                        {% endif %}
+                        
+                    </li>
+                </ul>
+            </div>
+        </div>
+    </nav>
+
+    <header class="hero-section">
+        <div class="container">
+            <div class="row align-items-center">
+                <div class="col-lg-7">
+                    <span class="hero-badge">Conectando solidaridad con comunidad</span>
+                    <h1 class="mt-4 fw-bold">Distribución Equitativa de Recursos en Ollas Comunes</h1>
+                    <p class="lead mt-4 text-light">Plataforma digital que centraliza, organiza y transparenta la gestión de recursos para ollas comunes en el Perú.</p>
+                    <div class="mt-5">
+                        <a href="{{ url_for('ollas_publicas_view') }}" class="btn btn-light text-primary fw-bold px-4 py-2 me-3 rounded-pill">Ver Ollas Comunes</a>
+                        <a href="{{ url_for('donar_view') }}" class="btn btn-outline-light px-4 py-2 rounded-pill">Donar Ahora</a>
+                    </div>
+                </div>
+                <div class="col-lg-5 mt-5 mt-lg-0">
+                    <div class="card p-4 shadow-lg bg-white bg-opacity-90 border-0" style="border-radius: 2rem; backdrop-filter: blur(12px);">
+                        <div class="text-center mb-4">
+                            <h2 class="fw-bold text-dark">150+</h2>
+                            <p class="mb-0 text-muted">Ollas Comunes activas</p>
+                        </div>
+                        <div class="text-center mb-4">
+                            <h2 class="fw-bold text-dark">5,000+</h2>
+                            <p class="mb-0 text-muted">Familias beneficiadas</p>
+                        </div>
+                        <div class="text-center">
+                            <h2 class="fw-bold text-dark">98%</h2>
+                            <p class="mb-0 text-muted">Transparencia</p>
+                        </div>
+                    </div>
+                </div>
+            </div>
+
+            <div class="row hero-stats mt-5">
+                <div class="col-md-3 mb-3 mb-md-0">
+                    <div class="stat-card p-4 text-center">
+                        <span class="stat-value">150+</span>
+                        <p class="mb-0 text-muted fw-bold">Ollas Comunes</p>
+                    </div>
+                </div>
+                <div class="col-md-3 mb-3 mb-md-0">
+                    <div class="stat-card p-4 text-center">
+                        <span class="stat-value">5,000+</span>
+                        <p class="mb-0 text-muted fw-bold">Familias</p>
+                    </div>
+                </div>
+                <div class="col-md-3 mb-3 mb-md-0">
+                    <div class="stat-card p-4 text-center">
+                        <span class="stat-value">200+</span>
+                        <p class="mb-0 text-muted fw-bold">Donantes</p>
+                    </div>
+                </div>
+                <div class="col-md-3">
+                    <div class="stat-card p-4 text-center">
+                        <span class="stat-value">98%</span>
+                        <p class="mb-0 text-muted fw-bold">Transparencia</p>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </header>
+
+    <!-- SECCIÓN CÓMO FUNCIONA -->
+    <section class="features-section py-5 bg-white">
+        <div class="container my-4">
+            <div class="text-center mb-5">
+                <h2 class="fw-bold">¿Cómo Funciona?</h2>
+                <p class="text-muted mx-auto" style="max-width: 640px;">Una plataforma completa para gestionar recursos de manera transparente y eficiente.</p>
+            </div>
+            <div class="row g-4">
+                <div class="col-md-4">
+                    <div class="feature-card p-4 text-center">
+                        <div class="feature-icon mb-3">📋</div>
+                        <h5 class="fw-bold">Registro de Ollas Comunes</h5>
+                        <p class="text-muted small">Registra y gestiona ollas con información actualizada sobre beneficiarios y ubicaciones.</p>
+                    </div>
+                </div>
+                <div class="col-md-4">
+                    <div class="feature-card p-4 text-center">
+                        <div class="feature-icon mb-3">🤝</div>
+                        <h5 class="fw-bold">Sistema de Donaciones</h5>
+                        <p class="text-muted small">Conecta donantes con comunidades de forma transparente y eficiente.</p>
+                    </div>
+                </div>
+                <div class="col-md-4">
+                    <div class="feature-card p-4 text-center">
+                        <div class="feature-icon mb-3">📌</div>
+                        <h5 class="fw-bold">Geolocalización</h5>
+                        <p class="text-muted small">Encuentra ollas comunes cercanas y visualiza su ubicación en tiempo real.</p>
+                    </div>
+                </div>
+                <div class="col-md-4">
+                    <div class="feature-card p-4 text-center">
+                        <div class="feature-icon mb-3">⚖️</div>
+                        <h5 class="fw-bold">Distribución Equitativa</h5>
+                        <p class="text-muted small">Asegura que los recursos lleguen a quienes más lo necesitan con priorización.</p>
+                    </div>
+                </div>
+                <div class="col-md-4">
+                    <div class="feature-card p-4 text-center">
+                        <div class="feature-icon mb-3">🔍</div>
+                        <h5 class="fw-bold">Transparencia Total</h5>
+                        <p class="text-muted small">Visibilidad completa de las donaciones y el destino de los recursos.</p>
+                    </div>
+                </div>
+                <div class="col-md-4">
+                    <div class="feature-card p-4 text-center">
+                        <div class="feature-icon mb-3">🔔</div>
+                        <h5 class="fw-bold">Notificaciones</h5>
+                        <p class="text-muted small">Recibe alertas sobre necesidades críticas y estados de solicitudes.</p>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </section>
+
+    <!-- LLAMADO A LA ACCIÓN -->
+    <section class="cta-section py-5">
+        <div class="container text-center py-4">
+            <h2 class="fw-bold">Contribuye a la Reducción de Desigualdades</h2>
+            <p class="lead mb-4 text-muted">Alinéate con el ODS 10 y ayuda a que la ayuda llegue a quienes más la necesitan.</p>
+            <a href="{{ url_for('donar_view') }}" class="btn btn-primary px-5 py-3 rounded-pill fw-bold shadow">Comienza a Ayudar</a>
+        </div>
+    </section>
+
+    <footer class="bg-dark text-white py-4 mt-auto">
+        <div class="container text-center">
+            <p class="mb-0 text-white-50">© 2026 Red Comunitaria. Todos los derechos reservados.</p>
+        </div>
+    </footer>
+
+    <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/js/bootstrap.bundle.min.js"></script>
+</body>
+</html>

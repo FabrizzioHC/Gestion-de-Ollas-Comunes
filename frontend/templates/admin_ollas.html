@@ -1,0 +1,276 @@
+{% extends "base.html" %}
+
+{% block title %}Gestión de Ollas - Red Comunitaria{% endblock %}
+
+{% block extra_css %}
+<style>
+    /* Evita que el margen global .form-control desalineé el buscador */
+    #panelBuscarOlla .input-group > .form-control {
+        margin-bottom: 0;
+        border-radius: 0;
+        padding: .375rem .75rem;
+    }
+    #panelBuscarOlla .input-group > .input-group-text {
+        border-radius: .375rem 0 0 .375rem;
+    }
+    #panelBuscarOlla .input-group > .btn {
+        border-radius: 0 .375rem .375rem 0;
+    }
+</style>
+{% endblock %}
+
+{% block content %}
+<div class="container-fluid p-0">
+    <h2 class="mb-4 fw-bold text-dark">
+        <i class="bi bi-house-gear-fill text-primary me-2"></i> Gestión de Ollas Comunes
+    </h2>
+
+    <div class="card shadow-sm border-0 rounded-4">
+        <div class="card-body p-4">
+            <!-- Acciones dentro del cuadro blanco -->
+            <div class="d-flex flex-wrap align-items-center justify-content-between gap-2 mb-3">
+                <span class="fw-semibold text-secondary">Ollas comunes registradas</span>
+                <div class="d-flex flex-wrap gap-2">
+                    <button type="button" class="btn btn-outline-primary fw-bold shadow-sm" id="btnBuscarOlla"
+                            aria-expanded="{{ 'true' if termino_busqueda else 'false' }}" aria-controls="panelBuscarOlla">
+                        <i class="bi bi-search me-1"></i> Buscar
+                    </button>
+                    <button type="button" class="btn btn-success fw-bold shadow-sm"
+                            data-bs-toggle="modal" data-bs-target="#modalAgregarOlla">
+                        <i class="bi bi-plus-circle me-1"></i> Agregar
+                    </button>
+                </div>
+            </div>
+
+            <!-- Búsqueda real: GET -> Controlador -> DAO -> BD -->
+            <div id="panelBuscarOlla" class="{{ 'd-none' if not termino_busqueda }} mb-3">
+                <form action="{{ url_for('olla.admin_ollas_view') }}" method="GET">
+                    <label for="inputBuscarOlla" class="form-label fw-bold">Buscar olla común</label>
+                    <div class="input-group">
+                        <span class="input-group-text"><i class="bi bi-search"></i></span>
+                        <input type="search" class="form-control" id="inputBuscarOlla" name="q"
+                               value="{{ termino_busqueda }}"
+                               placeholder="Nombre, dirección, beneficiarios o estado" autocomplete="off">
+                        <button type="submit" class="btn btn-primary">Buscar</button>
+                        <a href="{{ url_for('olla.admin_ollas_view') }}" class="btn btn-outline-secondary">Limpiar</a>
+                    </div>
+                </form>
+            </div>
+            
+            <div class="table-responsive">
+                <table class="table table-hover align-middle">
+                    <thead class="table-dark">
+                        <tr>
+                            <th>Nombre</th>
+                            <th>Dirección</th>
+                            <th>Beneficiarios</th>
+                            <th>Estado</th>
+                            <th class="text-center">Acciones</th>
+                        </tr>
+                    </thead>
+                    <tbody>
+                        {% if lista_ollas %}
+                            {% for o in lista_ollas %}
+                            <tr class="fila-olla">
+                                <td class="fw-bold text-primary">{{ o.nombre_olla }}</td>
+                                <td>{{ o.direccion }}</td>
+                                <td>{{ o.beneficiarios_atendidos }}</td>
+                                <td>
+                                    <span class="badge {% if o.estado == 'ACTIVA' %}bg-success{% else %}bg-danger{% endif %} rounded-pill px-3 py-1">
+                                        {{ o.estado }}
+                                    </span>
+                                </td>
+                                <td class="text-center">
+                                    <!-- Botón Editar con atributos de datos (Bootstrap nativo) -->
+                                    <button type="button" class="btn btn-warning btn-sm fw-bold shadow-sm me-1" 
+                                            data-bs-toggle="modal" 
+                                            data-bs-target="#modalEditarOlla"
+                                            data-id="{{ o.id }}"
+                                            data-nombre="{{ o.nombre_olla }}"
+                                            data-direccion="{{ o.direccion }}"
+                                            data-descripcion="{{ o.descripcion or '' }}"
+                                            data-beneficiarios="{{ o.beneficiarios_atendidos }}"
+                                            data-estado="{{ o.estado }}">
+                                        <i class="bi bi-pencil-square"></i>
+                                    </button>
+
+                                    <!-- Botón Eliminar -->
+                                    <form action="{{ url_for('olla.admin_eliminar_olla') }}" method="POST" class="d-inline" onsubmit="return confirm('¿Estás seguro de eliminar esta olla? Se perderá permanentemente si no tiene registros amarrados.');">
+                                        <input type="hidden" name="idOlla" value="{{ o.id }}">
+                                        <button type="submit" class="btn btn-danger btn-sm fw-bold shadow-sm">
+                                            <i class="bi bi-trash-fill"></i>
+                                        </button>
+                                    </form>
+                                </td>
+                            </tr>
+                            {% endfor %}
+                        {% else %}
+                            <tr>
+                                <td colspan="5" class="text-center py-4 text-muted">
+                                    {{ "No se encontraron ollas con esa búsqueda." if termino_busqueda else "No hay ollas registradas." }}
+                                </td>
+                            </tr>
+                        {% endif %}
+                    </tbody>
+                </table>
+            </div>
+        </div>
+    </div>
+</div>
+
+<!-- MODAL AGREGAR OLLA COMÚN -->
+<div class="modal fade" id="modalAgregarOlla" tabindex="-1" aria-labelledby="modalAgregarOllaLabel" aria-hidden="true">
+    <div class="modal-dialog modal-dialog-centered">
+        <div class="modal-content rounded-4 border-0 shadow">
+            <div class="modal-header bg-success text-white rounded-top-4">
+                <h5 class="modal-title fw-bold" id="modalAgregarOllaLabel">
+                    <i class="bi bi-house-add-fill me-2"></i> Agregar Olla Común
+                </h5>
+                <button type="button" class="btn-close btn-close-white" data-bs-dismiss="modal" aria-label="Cerrar"></button>
+            </div>
+            <form action="{{ url_for('olla.admin_agregar_olla') }}" method="POST" id="formAgregarOlla">
+                <div class="modal-body p-4">
+                    <div class="mb-3">
+                        <label for="nuevaLideresa" class="form-label small fw-bold text-muted">Lideresa responsable</label>
+                        <select class="form-select" name="usuario_id" id="nuevaLideresa" required>
+                            <option value="" selected disabled>Selecciona una lideresa disponible</option>
+                            {% for lideresa in lideresas_disponibles %}
+                                <option value="{{ lideresa.id }}">
+                                    {{ lideresa.nombres }} {{ lideresa.apellidos }} — {{ lideresa.email }}
+                                </option>
+                            {% endfor %}
+                        </select>
+                        <div class="form-text">Cada lideresa puede gestionar una olla común.</div>
+                    </div>
+                    
+                    {% if not lideresas_disponibles %}
+                        <div class="alert alert-warning small">
+                            No hay lideresas disponibles. Primero registra una usuaria con rol LIDERESA desde Gestión de Usuarios.
+                        </div>
+                    {% endif %}
+                    
+                    <div class="mb-3">
+                        <label for="nuevoNombreOlla" class="form-label small fw-bold text-muted">Nombre de la olla</label>
+                        <input type="text" class="form-control" id="nuevoNombreOlla" name="nombre_olla" maxlength="150" required>
+                    </div>
+                    <div class="mb-3">
+                        <label for="nuevaDireccionOlla" class="form-label small fw-bold text-muted">Dirección</label>
+                        <input type="text" class="form-control" id="nuevaDireccionOlla" name="direccion" maxlength="255" required>
+                    </div>
+                    <div class="mb-3">
+                        <label for="nuevaDescripcionOlla" class="form-label small fw-bold text-muted">Descripción (opcional)</label>
+                        <textarea class="form-control" id="nuevaDescripcionOlla" name="descripcion" rows="2" maxlength="2000"></textarea>
+                    </div>
+                    <div class="row g-3">
+                        <div class="col-6">
+                            <label for="nuevosBeneficiarios" class="form-label small fw-bold text-muted">Beneficiarios</label>
+                            <input type="number" class="form-control" id="nuevosBeneficiarios" name="beneficiarios" value="0" min="0" max="1000000" required>
+                        </div>
+                        <div class="col-6">
+                            <label for="nuevoEstadoOlla" class="form-label small fw-bold text-muted">Estado</label>
+                            <select class="form-select" id="nuevoEstadoOlla" name="estado" required>
+                                <option value="ACTIVA">ACTIVA</option>
+                                <option value="PAUSADA">PAUSADA</option>
+                                <option value="INACTIVA">INACTIVA</option>
+                            </select>
+                        </div>
+                    </div>
+                </div>
+                <div class="modal-footer border-0 p-4 pt-0">
+                    <button type="button" class="btn btn-light" data-bs-dismiss="modal">Cancelar</button>
+                    <button type="submit" class="btn btn-success fw-bold shadow-sm" {% if not lideresas_disponibles %}disabled{% endif %}>
+                        <i class="bi bi-check-lg me-1"></i> Guardar Olla
+                    </button>
+                </div>
+            </form>
+        </div>
+    </div>
+</div>
+
+<!-- MODAL DE EDICIÓN DE OLLA -->
+<div class="modal fade" id="modalEditarOlla" tabindex="-1" aria-hidden="true">
+    <div class="modal-dialog">
+        <div class="modal-content rounded-4 border-0 shadow">
+            <div class="modal-header bg-primary text-white rounded-top-4">
+                <h5 class="modal-title fw-bold"><i class="bi bi-house-gear-fill me-2"></i>Editar Olla Común</h5>
+                <button type="button" class="btn-close btn-close-white" data-bs-dismiss="modal"></button>
+            </div>
+            <form action="{{ url_for('olla.admin_editar_olla') }}" method="POST">
+                <div class="modal-body p-4">
+                    <input type="hidden" name="idOlla" id="edit_id_olla">
+
+                    <div class="mb-3">
+                        <label class="form-label small fw-bold text-muted">Nombre de la Olla</label>
+                        <input type="text" class="form-control bg-light" name="nombre_olla" id="edit_nombre_olla" required>
+                    </div>
+                    <div class="mb-3">
+                        <label class="form-label small fw-bold text-muted">Dirección</label>
+                        <input type="text" class="form-control bg-light" name="direccion" id="edit_direccion" required>
+                    </div>
+                    <div class="mb-3">
+                        <label class="form-label small fw-bold text-muted">Descripción</label>
+                        <textarea class="form-control bg-light" name="descripcion" id="edit_descripcion" rows="2"></textarea>
+                    </div>
+                    <div class="row">
+                        <div class="col-6">
+                            <label class="form-label small fw-bold text-muted">Beneficiarios</label>
+                            <input type="number" class="form-control bg-light" name="beneficiarios" id="edit_beneficiarios" min="0" required>
+                        </div>
+                        <div class="col-6">
+                            <label class="form-label small fw-bold text-muted">Estado</label>
+                            <select class="form-select bg-light fw-bold" name="estado" id="edit_estado">
+                                <option value="ACTIVA">ACTIVA</option>
+                                <option value="INACTIVA">INACTIVA (Pausada)</option>
+                            </select>
+                        </div>
+                    </div>
+                </div>
+                <div class="modal-footer border-0 p-4 pt-0">
+                    <button type="button" class="btn btn-light" data-bs-dismiss="modal">Cancelar</button>
+                    <button type="submit" class="btn btn-primary px-4 fw-bold shadow-sm">Guardar Cambios</button>
+                </div>
+            </form>
+        </div>
+    </div>
+</div>
+{% endblock %}
+
+{% block extra_js %}
+<script>
+    // Escuchamos cuando el modal está a punto de abrirse
+    var modalEditarOlla = document.getElementById('modalEditarOlla');
+    if (modalEditarOlla) {
+        modalEditarOlla.addEventListener('show.bs.modal', function (event) {
+            var button = event.relatedTarget;
+            
+            // Extraemos la información de los atributos data-* del botón
+            var id = button.getAttribute('data-id');
+            var nombre = button.getAttribute('data-nombre');
+            var direccion = button.getAttribute('data-direccion');
+            var descripcion = button.getAttribute('data-descripcion');
+            var beneficiarios = button.getAttribute('data-beneficiarios');
+            var estado = button.getAttribute('data-estado');
+            
+            // Inyectamos los datos en los inputs del formulario dentro del modal
+            document.getElementById('edit_id_olla').value = id;
+            document.getElementById('edit_nombre_olla').value = nombre;
+            document.getElementById('edit_direccion').value = direccion;
+            document.getElementById('edit_descripcion').value = descripcion;
+            document.getElementById('edit_beneficiarios').value = beneficiarios;
+            document.getElementById('edit_estado').value = estado;
+        });
+    }
+
+    // Mostrar u ocultar el formulario; los datos se consultan en el servidor.
+    var btnBuscarOlla = document.getElementById('btnBuscarOlla');
+    var panelBuscarOlla = document.getElementById('panelBuscarOlla');
+    if (btnBuscarOlla && panelBuscarOlla) {
+        btnBuscarOlla.addEventListener('click', function() {
+            var abrir = panelBuscarOlla.classList.contains('d-none');
+            panelBuscarOlla.classList.toggle('d-none', !abrir);
+            btnBuscarOlla.setAttribute('aria-expanded', String(abrir));
+            if (abrir) document.getElementById('inputBuscarOlla').focus();
+        });
+    }
+</script>
+{% endblock %}

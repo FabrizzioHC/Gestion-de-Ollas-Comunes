@@ -1,0 +1,39 @@
+# ==========================================
+# Entornos virtuales
+# ==========================================
+venv/
+env/
+
+# ==========================================
+# Variables de entorno y secretos
+# ==========================================
+# ¡CRÍTICO! Nunca subas el .env porque contiene tus contraseñas de BD y SECRET_KEY
+.env
+.env.*
+!.env.example
+
+# ==========================================
+# Archivos compilados de Python (Caché)
+# ==========================================
+__pycache__/
+*.pyc
+*.pyo
+*.pyd
+
+# ==========================================
+# Configuraciones del Editor de Código
+# ==========================================
+.vscode/
+.idea/
+
+# ==========================================
+# Archivos temporales del Sistema Operativo
+# ==========================================
+.DS_Store
+Thumbs.db
+
+# ==========================================
+# Logs y bases de datos locales (si usas SQLite de prueba)
+# ==========================================
+*.log
+*.sqlite3

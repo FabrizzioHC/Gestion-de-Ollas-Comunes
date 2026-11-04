@@ -1,0 +1,86 @@
+{% extends "base.html" %}
+
+{% block title %}Mi Perfil - Red Comunitaria{% endblock %}
+
+{% block content %}
+<!-- CONTENIDO PRINCIPAL DEL PERFIL -->
+<div class="container-fluid p-0">
+    <h2 class="mb-4 fw-bold text-dark">Mi Perfil</h2>
+
+    <div class="card shadow-sm border-0 rounded-4">
+        <div class="card-body p-4">
+            <div class="mb-4">
+                <!-- BOTÓN QUE ABRE EL MODAL -->
+                <button class="btn btn-info text-white fw-bold rounded-pill px-4" data-bs-toggle="modal" data-bs-target="#modalEditarPerfil">
+                    Editar Perfil
+                </button>
+            </div>
+            
+            <!-- Usamos la variable 'usu' que deberá ser enviada desde el controlador de Flask -->
+            <div class="mb-3">
+                <label class="form-label text-muted small fw-bold">Email (No editable)</label>
+                <div class="form-control bg-light border-0">{{ usu.email }}</div>
+            </div>
+            
+            <div class="mb-3">
+                <label class="form-label text-muted small fw-bold">Nombres Completos</label>
+                <div class="form-control bg-light border-0">{{ usu.nombres }} {{ usu.apellidos }}</div>
+            </div>
+            
+            <div class="mb-3">
+                <label class="form-label text-muted small fw-bold">Rol en el Sistema</label>
+                <div class="form-control bg-light border-0 text-uppercase">{{ usu.rol }}</div>
+            </div>
+            
+            <div class="mb-3">
+                <label class="form-label text-muted small fw-bold">Teléfono</label>
+                <div class="form-control bg-light border-0">
+                    {{ usu.telefono if usu.telefono else "No registrado" }}
+                </div>
+            </div>
+            
+            <div class="mb-3">
+                <label class="form-label text-muted small fw-bold">DNI</label>
+                <div class="form-control bg-light border-0">{{ usu.dni }}</div>
+            </div>
+        </div>
+    </div>
+</div>
+
+<!-- MODAL DE EDICIÓN BOOTSTRAP -->
+<div class="modal fade" id="modalEditarPerfil" tabindex="-1" aria-labelledby="modalLabel" aria-hidden="true">
+    <div class="modal-dialog">
+        <div class="modal-content border-0 rounded-4 shadow-lg">
+            <div class="modal-header bg-primary text-white" style="border-top-left-radius: 1rem; border-top-right-radius: 1rem;">
+                <h5 class="modal-title fw-bold" id="modalLabel">Actualizar Datos</h5>
+                <button type="button" class="btn-close btn-close-white" data-bs-dismiss="modal" aria-label="Close"></button>
+            </div>
+            <!-- Conectado a la ruta que actualizará el perfil en Flask -->
+            <form action="{{ url_for('usuario.actualizar_perfil') }}" method="POST">
+                <div class="modal-body p-4">
+                    <div class="mb-3">
+                        <label class="form-label small fw-bold">Nombres</label>
+                        <input type="text" class="form-control" name="nombres" value="{{ usu.nombres }}" required>
+                    </div>
+                    <div class="mb-3">
+                        <label class="form-label small fw-bold">Apellidos</label>
+                        <input type="text" class="form-control" name="apellidos" value="{{ usu.apellidos }}" required>
+                    </div>
+                    <div class="mb-3">
+                        <label class="form-label small fw-bold">Teléfono</label>
+                        <input type="tel" class="form-control" name="telefono" value="{{ usu.telefono if usu.telefono else '' }}">
+                    </div>
+                    <div class="mb-3">
+                        <label class="form-label small fw-bold">DNI</label>
+                        <input type="text" class="form-control" name="dni" value="{{ usu.dni }}" maxlength="8" required>
+                    </div>
+                </div>
+                <div class="modal-footer border-0">
+                    <button type="button" class="btn btn-light rounded-pill" data-bs-dismiss="modal">Cancelar</button>
+                    <button type="submit" class="btn btn-primary rounded-pill px-4">Guardar Cambios</button>
+                </div>
+            </form>
+        </div>
+    </div>
+</div>
+{% endblock %}

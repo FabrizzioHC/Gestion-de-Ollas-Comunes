@@ -1,0 +1,118 @@
+{% extends "base.html" %}
+
+{% block title %}Mi Historial de Donaciones - Red Comunitaria{% endblock %}
+
+{% block content %}
+<div class="container-fluid p-0">
+    <h2 class="mb-4 fw-bold text-dark">
+        <i class="bi bi-clock-history text-primary me-2"></i> Mi Historial de Donaciones
+    </h2>
+
+    <div class="card shadow-sm border-0 rounded-4">
+        <div class="card-body p-4">
+            <p class="text-muted mb-4">Aquí puedes hacer seguimiento al estado de todas las ayudas que has brindado a las ollas comunes.</p>
+
+            <div class="table-responsive">
+                <table class="table table-hover align-middle">
+                    <thead class="table-light">
+                        <tr>
+                            <th>Fecha</th>
+                            <th>Destino (Olla Común)</th>
+                            <th>Detalle del Recurso</th>
+                            <th>Estado</th>
+                            <th>Acciones</th>
+                        </tr>
+                    </thead>
+                    <tbody>
+                        {% if mis_donaciones %}
+                            {% for fila in mis_donaciones %}
+                            <tr>
+                                <td class="text-muted small">{{ fila.fecha_registro.strftime('%d/%m/%Y') if fila.fecha_registro else '' }}</td>
+                                <td class="fw-bold text-primary">{{ fila.nombre_olla }}</td>
+                                <td>
+                                    {% if fila.recurso %}
+                                        <strong>{{ fila.recurso }}</strong>: {{ fila.cantidad }} {{ fila.unidad_medida }}
+                                    {% else %}
+                                        {{ fila.mensaje }}
+                                    {% endif %}
+                                </td>
+                                <td>
+                                    <span class="badge {% if fila.estado == 'Pendiente' %}bg-warning text-dark{% elif fila.estado == 'Aceptada' %}bg-primary{% elif fila.estado == 'Entregada' %}bg-success{% else %}bg-danger{% endif %} rounded-pill px-3 py-2">
+                                        {{ fila.estado }}
+                                    </span>
+                                </td>
+                                <td>
+                                    {% if fila.estado == 'Pendiente' %}
+                                        <!-- Botón Editar -->
+                                        <button type="button" class="btn btn-warning btn-sm fw-bold shadow-sm me-1"
+                                            data-id="{{ fila.id }}"
+                                            data-mensaje="{{ fila.mensaje }}"
+                                            onclick="abrirModalEditarDonacion(this)">
+                                            <i class="bi bi-pencil-square"></i>
+                                        </button>
+                                        <!-- Botón Eliminar -->
+                                        <form action="{{ url_for('donacion.eliminar_donacion') }}" method="POST" class="d-inline" onsubmit="return confirm('¿Estás seguro de cancelar esta donación?');">
+                                            <input type="hidden" name="idDonacion" value="{{ fila.id }}">
+                                            <button type="submit" class="btn btn-danger btn-sm fw-bold shadow-sm">
+                                                <i class="bi bi-trash-fill"></i>
+                                            </button>
+                                        </form>
+                                    {% else %}
+                                        <span class="badge bg-light text-muted border border-secondary px-3 py-2">
+                                            <i class="bi bi-lock-fill me-1"></i> Bloqueada
+                                        </span>
+                                    {% endif %}
+                                </td>
+                            </tr>
+                            {% endfor %}
+                        {% else %}
+                            <tr>
+                                <td colspan="5" class="text-center py-5 text-muted">
+                                    Aún no has registrado ninguna donación. ¡Ve a "Donar Ahora" en el inicio para empezar!
+                                </td>
+                            </tr>
+                        {% endif %}
+                    </tbody>
+                </table>
+            </div>
+        </div>
+    </div>
+</div>
+
+<!-- MODAL DE EDICIÓN DE DONACIÓN -->
+<div class="modal fade" id="modalEditarDonacion" tabindex="-1" aria-hidden="true">
+    <div class="modal-dialog">
+        <div class="modal-content rounded-4 border-0 shadow">
+            <div class="modal-header bg-warning text-dark rounded-top-4">
+                <h5 class="modal-title fw-bold"><i class="bi bi-pencil-square me-2"></i>Editar Detalles de Donación</h5>
+                <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close"></button>
+            </div>
+            <form action="{{ url_for('donacion.actualizar_donacion') }}" method="POST">
+                <div class="modal-body p-4">
+                    <input type="hidden" name="idDonacion" id="edit_donacion_id">
+
+                    <div class="mb-3">
+                        <label class="form-label small fw-bold text-muted">Detalle del Recurso (Mensaje)</label>
+                        <textarea class="form-control bg-light" name="mensaje" id="edit_donacion_mensaje" rows="3" required></textarea>
+                        <div class="form-text text-muted">Corrige las cantidades o la descripción de tu donación.</div>
+                    </div>
+                </div>
+                <div class="modal-footer border-0 p-4 pt-0">
+                    <button type="button" class="btn btn-light" data-bs-dismiss="modal">Cancelar</button>
+                    <button type="submit" class="btn btn-warning px-4 fw-bold shadow-sm">Guardar Cambios</button>
+                </div>
+            </form>
+        </div>
+    </div>
+</div>
+{% endblock %}
+
+{% block extra_js %}
+<script>
+    function abrirModalEditarDonacion(btn) {
+        document.getElementById('edit_donacion_id').value = btn.dataset.id;
+        document.getElementById('edit_donacion_mensaje').value = btn.dataset.mensaje;
+        new bootstrap.Modal(document.getElementById('modalEditarDonacion')).show();
+    }
+</script>
+{% endblock %}

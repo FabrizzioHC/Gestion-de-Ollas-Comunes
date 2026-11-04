@@ -1,0 +1,76 @@
+{% extends "base.html" %}
+
+{% block title %}Aprobar Solicitudes - Red Comunitaria{% endblock %}
+
+{% block content %}
+<div class="container-fluid p-0">
+    <h2 class="mb-4 fw-bold text-dark">
+        <i class="bi bi-shield-check text-success me-2"></i> Gestión de Solicitudes Globales
+    </h2>
+
+    <div class="card shadow-sm border-0 rounded-4">
+        <div class="card-body p-4">
+            <p class="text-muted">Como administrador, debes validar las solicitudes antes de que sean visibles para los donadores.</p>
+            
+            <div class="table-responsive mt-4">
+                <table class="table table-hover align-middle text-center">
+                    <thead class="table-dark">
+                        <tr>
+                            <th>Olla Común</th>
+                            <th>Insumo Pedido</th>
+                            <th>Cantidad</th>
+                            <th>Urgencia</th>
+                            <th>Estado</th>
+                            <th>Acciones (Aprobar/Rechazar)</th>
+                        </tr>
+                    </thead>
+                    <tbody>
+                        {% if todas_las_solicitudes %} 
+                            {% for sol in todas_las_solicitudes %}
+                            <tr>
+                                <!-- Asumimos que tu modelo Solicitud o el DAO trae el nombre de la olla -->
+                                <td class="fw-bold text-primary">{{ sol.nombre_olla }}</td>
+                                <td>{{ sol.recurso_necesitado }}</td>
+                                <td>{{ sol.cantidad_necesitada }} {{ sol.unidad_medida }}</td>
+                                <td>
+                                    <span class="badge {% if sol.nivel_urgencia == 'Crítica' %}bg-danger{% elif sol.nivel_urgencia == 'Alta' %}bg-warning text-dark{% else %}bg-info text-dark{% endif %}">
+                                        {{ sol.nivel_urgencia }}
+                                    </span>
+                                </td>
+                                <td>
+                                    <span class="badge {% if sol.estado == 'Pendiente' %}bg-warning text-dark{% elif sol.estado == 'Aceptada' %}bg-success{% else %}bg-secondary{% endif %} rounded-pill px-3 py-2">
+                                        {{ sol.estado }}
+                                    </span>
+                                </td>
+                                <td>
+                                    {% if sol.estado == 'Pendiente' %}
+                                        <!-- Botón Aprobar -->
+                                        <form action="{{ url_for('solicitud.cambiar_estado_solicitud') }}" method="POST" class="d-inline">
+                                            <input type="hidden" name="idSolicitud" value="{{ sol.id }}">
+                                            <input type="hidden" name="nuevoEstado" value="Aceptada">
+                                            <button type="submit" class="btn btn-success btn-sm fw-bold shadow-sm" title="Aprobar"><i class="bi bi-check-lg"></i></button>
+                                        </form>
+                                        <!-- Botón Rechazar -->
+                                        <form action="{{ url_for('solicitud.cambiar_estado_solicitud') }}" method="POST" class="d-inline">
+                                            <input type="hidden" name="idSolicitud" value="{{ sol.id }}">
+                                            <input type="hidden" name="nuevoEstado" value="Rechazada">
+                                            <button type="submit" class="btn btn-danger btn-sm fw-bold shadow-sm" title="Rechazar"><i class="bi bi-x-lg"></i></button>
+                                        </form>
+                                    {% else %}
+                                        <span class="text-muted small">Sin acciones</span>
+                                    {% endif %}
+                                </td>
+                            </tr>
+                            {% endfor %}
+                        {% else %}
+                            <tr>
+                                <td colspan="6" class="text-center py-4 text-muted">No hay solicitudes registradas en el sistema.</td>
+                            </tr>
+                        {% endif %}
+                    </tbody>
+                </table>
+            </div>
+        </div>
+    </div>
+</div>
+{% endblock %}

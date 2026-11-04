@@ -1,0 +1,150 @@
+{% extends "base.html" %}
+
+{% block title %}Almacén General - Administrador{% endblock %}
+
+{% block content %}
+<div class="container-fluid p-0">
+    <div class="d-flex justify-content-between align-items-center mb-4">
+        <h2 class="fw-bold text-dark">
+            <i class="bi bi-building-fill-gear text-primary me-2"></i> Almacén Central de Donaciones
+        </h2>
+        <span class="badge bg-danger fs-6 px-3 py-2">Rol: Administrador</span>
+    </div>
+
+    <div class="row g-4">
+        <!-- Formulario de Ingreso Central -->
+        <div class="col-lg-4">
+            <div class="card shadow-sm border-0 rounded-4">
+                <div class="card-header bg-white border-0 pt-4 pb-0 px-4">
+                    <h5 class="fw-bold mb-0">Ingreso Manual al Almacén</h5>
+                    <p class="text-muted small">Registra donaciones físicas recibidas centralmente</p>
+                </div>
+                <div class="card-body p-4">
+                    <form action="{{ url_for('recurso.registrar_almacen_general') }}" method="POST">
+                        <div class="mb-3">
+                            <label class="form-label small fw-bold text-muted">Nombre del Recurso</label>
+                            <input type="text" class="form-control bg-light" name="nombreRecurso" placeholder="Ej. Arroz, Aceite, Fideos" required>
+                        </div>
+                        
+                        <div class="row">
+                            <div class="col-6 mb-3">
+                                <label class="form-label small fw-bold text-muted">Cantidad</label>
+                                <input type="number" step="0.01" class="form-control bg-light" name="cantidad" placeholder="0.00" required>
+                            </div>
+                            <div class="col-6 mb-3">
+                                <label class="form-label small fw-bold text-muted">Unidad</label>
+                                <select class="form-select bg-light" name="unidadMedida" required>
+                                    <option value="kg">Kilogramos (kg)</option>
+                                    <option value="litros">Litros (L)</option>
+                                    <option value="unidades">Unidades (uds)</option>
+                                    <option value="sacos">Sacos</option>
+                                </select>
+                            </div>
+                        </div>
+                        
+                        <button type="submit" class="btn btn-primary w-100 rounded-pill fw-bold mt-2">
+                            + Guardar en Almacén
+                        </button>
+                    </form>
+                </div>
+            </div>
+        </div>
+
+        <!-- Tabla de Stock Central -->
+        <div class="col-lg-8">
+            <div class="card shadow-sm border-0 rounded-4 h-100">
+                <div class="card-body p-4">
+                    <h5 class="fw-bold mb-4">Stock Disponible para Distribuir</h5>
+                    
+                    <div class="table-responsive">
+                        <table class="table table-hover align-middle">
+                            <thead class="table-light">
+                                <tr>
+                                    <th>ID</th>
+                                    <th>Recurso</th>
+                                    <th>Stock Total</th>
+                                    <th>Unidad</th>
+                                    <th>Última Actualización</th>
+                                    <th class="text-center">Acciones</th>
+                                </tr>
+                            </thead>
+                            <tbody>
+                                {% if stock_general %} 
+                                    {% for rec in stock_general %}
+                                    <tr>
+                                        <td>{{ rec.id }}</td>
+                                        <td class="fw-medium">{{ rec.nombre_recurso }}</td>
+                                        <td><span class="badge bg-success rounded-pill px-3 py-2 fs-6">{{ rec.cantidad }}</span></td>
+                                        <td class="text-muted">{{ rec.unidad_medida }}</td>
+                                        <td class="text-muted small">{{ rec.fecha_actualizacion }}</td>
+                                        <td class="text-center">
+                                            <!-- Botón Editar -->
+                                            <button type="button" class="btn btn-sm btn-outline-warning me-1" data-bs-toggle="modal" data-bs-target="#modalEdit{{ rec.id }}">
+                                                <i class="bi bi-pencil-fill"></i>
+                                            </button>
+                                            <!-- Formulario Eliminar -->
+                                            <form action="{{ url_for('recurso.eliminar_almacen_general') }}" method="POST" class="d-inline" onsubmit="return confirm('¿Seguro que deseas dar de baja este insumo del almacén?');">
+                                                <input type="hidden" name="idRecurso" value="{{ rec.id }}">
+                                                <button type="submit" class="btn btn-sm btn-outline-danger">
+                                                    <i class="bi bi-trash-fill"></i>
+                                                </button>
+                                            </form>
+                                        </td>
+                                    </tr>
+
+                                    <!-- Modal Editar Dinámico -->
+                                    <div class="modal fade" id="modalEdit{{ rec.id }}" tabindex="-1">
+                                        <div class="modal-dialog">
+                                            <div class="modal-content">
+                                                <form action="{{ url_for('recurso.editar_almacen_general') }}" method="POST">
+                                                    <input type="hidden" name="idRecurso" value="{{ rec.id }}">
+                                                    <div class="modal-header">
+                                                        <h5 class="modal-title fw-bold">Actualizar Stock</h5>
+                                                        <button type="button" class="btn-close" data-bs-dismiss="modal"></button>
+                                                    </div>
+                                                    <div class="modal-body">
+                                                        <div class="mb-3">
+                                                            <label class="form-label small fw-bold">Nombre</label>
+                                                            <input type="text" class="form-control" name="nombreRecurso" value="{{ rec.nombre_recurso }}" required>
+                                                        </div>
+                                                        <div class="row">
+                                                            <div class="col-6 mb-3">
+                                                                <label class="form-label small fw-bold">Cantidad</label>
+                                                                <input type="number" step="0.01" class="form-control" name="cantidad" value="{{ rec.cantidad }}" required>
+                                                            </div>
+                                                            <div class="col-6 mb-3">
+                                                                <label class="form-label small fw-bold">Unidad</label>
+                                                                <select class="form-select" name="unidadMedida" required>
+                                                                    <option value="kg" {% if rec.unidad_medida == 'kg' %}selected{% endif %}>Kilogramos (kg)</option>
+                                                                    <option value="litros" {% if rec.unidad_medida == 'litros' %}selected{% endif %}>Litros (L)</option>
+                                                                    <option value="unidades" {% if rec.unidad_medida == 'unidades' %}selected{% endif %}>Unidades (uds)</option>
+                                                                    <option value="sacos" {% if rec.unidad_medida == 'sacos' %}selected{% endif %}>Sacos</option>
+                                                                </select>
+                                                            </div>
+                                                        </div>
+                                                    </div>
+                                                    <div class="modal-footer">
+                                                        <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Cancelar</button>
+                                                        <button type="submit" class="btn btn-primary">Guardar Cambios</button>
+                                                    </div>
+                                                </form>
+                                            </div>
+                                        </div>
+                                    </div>
+                                    {% endfor %}
+                                {% else %}
+                                    <tr>
+                                        <td colspan="6" class="text-center py-4 text-muted">
+                                            No hay insumos almacenados actualmente en el almacén central.
+                                        </td>
+                                    </tr>
+                                {% endif %}
+                            </tbody>
+                        </table>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+{% endblock %}

@@ -1,0 +1,81 @@
+{% extends "base.html" %}
+
+{% block title %}Aprobar Donaciones - Red Comunitaria{% endblock %}
+
+{% block content %}
+<div class="container-fluid p-0">
+    <h2 class="mb-4 fw-bold text-dark">
+        <i class="bi bi-box-seam text-success me-2"></i> Gestión de Donaciones
+    </h2>
+
+    <div class="card shadow-sm border-0 rounded-4">
+        <div class="card-body p-4">
+            <p class="text-muted">Revisa las intenciones de donación. Una vez aceptadas, se mostrarán públicamente en el panel de Impacto Comunitario.</p>
+            
+            <div class="table-responsive mt-4">
+                <table class="table table-hover align-middle text-center">
+                    <thead class="table-dark">
+                        <tr>
+                            <th>Fecha</th>
+                            <th>Donante</th>
+                            <th>Destino (Olla)</th>
+                            <th>Recurso Ofrecido</th>
+                            <th>Estado</th>
+                            <th>Acciones</th>
+                        </tr>
+                    </thead>
+                    <tbody>
+                        {% if lista_donaciones %} 
+                            {% for d in lista_donaciones %}
+                            <tr>
+                                <td class="text-muted small">{{ d.fecha_registro.strftime('%d/%m/%Y %H:%M') if d.fecha_registro else '' }}</td>
+                                <td class="fw-bold"><i class="bi bi-person-fill text-muted me-1"></i> {{ d.nombres }}</td>
+                                <td class="text-primary fw-medium">{{ d.nombre_olla }}</td>
+                                    <td>
+                                        {% if d.recurso %}
+                                            <strong>{{ d.recurso }}</strong>: {{ d.cantidad }} {{ d.unidad_medida }}
+                                        {% else %}
+                                            {{ d.mensaje }}
+                                        {% endif %}
+                                    </td>
+                                <td>
+                                    <span class="badge {% if d.estado == 'Pendiente' %}bg-warning text-dark{% elif d.estado == 'Aceptada' %}bg-primary{% elif d.estado == 'Entregada' %}bg-success{% else %}bg-danger{% endif %} rounded-pill px-3 py-2">
+                                        {{ d.estado }}
+                                    </span>
+                                </td>
+                                <td>
+                                    {% if d.estado == 'Pendiente' %}
+                                        <form action="{{ url_for('donacion.cambiar_estado_donacion') }}" method="POST" class="d-inline">
+                                            <input type="hidden" name="idDonacion" value="{{ d.id }}">
+                                            <input type="hidden" name="nuevoEstado" value="Aceptada">
+                                            <button type="submit" class="btn btn-success btn-sm fw-bold shadow-sm" title="Aprobar"><i class="bi bi-check-lg"></i></button>
+                                        </form>
+                                        <form action="{{ url_for('donacion.cambiar_estado_donacion') }}" method="POST" class="d-inline">
+                                            <input type="hidden" name="idDonacion" value="{{ d.id }}">
+                                            <input type="hidden" name="nuevoEstado" value="Rechazada">
+                                            <button type="submit" class="btn btn-danger btn-sm fw-bold shadow-sm" title="Rechazar"><i class="bi bi-x-lg"></i></button>
+                                        </form>
+                                    {% elif d.estado == 'Aceptada' %}
+                                        <form action="{{ url_for('donacion.cambiar_estado_donacion') }}" method="POST" class="d-inline">
+                                            <input type="hidden" name="idDonacion" value="{{ d.id }}">
+                                            <input type="hidden" name="nuevoEstado" value="Entregada">
+                                            <button type="submit" class="btn btn-outline-success btn-sm fw-bold" title="Marcar como entregada"><i class="bi bi-box-seam"></i> Entregada</button>
+                                        </form>
+                                    {% else %}
+                                        <span class="text-muted small"><i class="bi bi-dash-lg"></i></span>
+                                    {% endif %}
+                                </td>
+                            </tr>
+                            {% endfor %}
+                        {% else %}
+                            <tr>
+                                <td colspan="6" class="text-center py-4 text-muted">No hay donaciones registradas en el sistema.</td>
+                            </tr>
+                        {% endif %}
+                    </tbody>
+                </table>
+            </div>
+        </div>
+    </div>
+</div>
+{% endblock %}

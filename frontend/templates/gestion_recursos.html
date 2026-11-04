@@ -1,0 +1,93 @@
+{% extends "base.html" %}
+
+{% block title %}Gestión de Recursos - Red Comunitaria{% endblock %}
+
+{% block content %}
+<div class="container-fluid p-0">
+    <h2 class="mb-4 fw-bold text-dark">
+        <i class="bi bi-box-seam-fill text-brown me-2"></i> Inventario de 
+        <span class="text-primary">{{ mi_olla.nombre_olla if mi_olla else "Mi Olla" }}</span>
+    </h2>
+
+    <div class="row g-4">
+        <!-- COLUMNA IZQUIERDA: Formulario para agregar recurso -->
+        <div class="col-lg-4">
+            <div class="card shadow-sm border-0 rounded-4">
+                <div class="card-header bg-white border-0 pt-4 pb-0 px-4">
+                    <h5 class="fw-bold mb-0">Registrar Ingreso</h5>
+                </div>
+                <div class="card-body p-4">
+                    <!-- Formulario conectado a la ruta de Flask para agregar recursos -->
+                    <form action="{{ url_for('recurso.agregar_recurso') }}" method="POST">
+                        <div class="mb-3">
+                            <label class="form-label small fw-bold text-muted">Nombre del Recurso</label>
+                            <input type="text" class="form-control bg-light" name="nombreRecurso" placeholder="Ej. Arroz, Aceite, Fideos" required>
+                        </div>
+                        
+                        <div class="row">
+                            <div class="col-6 mb-3">
+                                <label class="form-label small fw-bold text-muted">Cantidad</label>
+                                <input type="number" step="0.01" class="form-control bg-light" name="cantidad" placeholder="0.00" required>
+                            </div>
+                            <div class="col-6 mb-3">
+                                <label class="form-label small fw-bold text-muted">Unidad</label>
+                                <select class="form-select bg-light" name="unidadMedida" required>
+                                    <option value="kg">Kilogramos (kg)</option>
+                                    <option value="litros">Litros (L)</option>
+                                    <option value="unidades">Unidades (uds)</option>
+                                    <option value="sacos">Sacos</option>
+                                </select>
+                            </div>
+                        </div>
+                        
+                        <button type="submit" class="btn btn-primary w-100 rounded-pill fw-bold mt-2">
+                            + Agregar al Inventario
+                        </button>
+                    </form>
+                </div>
+            </div>
+        </div>
+
+        <!-- COLUMNA DERECHA: Tabla de inventario actual -->
+        <div class="col-lg-8">
+            <div class="card shadow-sm border-0 rounded-4 h-100">
+                <div class="card-body p-4">
+                    <h5 class="fw-bold mb-4">Stock Actual</h5>
+                    
+                    <div class="table-responsive">
+                        <table class="table table-hover align-middle">
+                            <thead class="table-light">
+                                <tr>
+                                    <th>Recurso</th>
+                                    <th>Cantidad</th>
+                                    <th>Unidad</th>
+                                    <th>Última Actualización</th>
+                                </tr>
+                            </thead>
+                            <tbody>
+                                {% if inventario %} 
+                                    {% for rec in inventario %}
+                                    <tr>
+                                        <!-- Accedemos a las propiedades del objeto o diccionario 'rec' -->
+                                        <td class="fw-medium">{{ rec.nombre_recurso }}</td>
+                                        <td><span class="badge bg-primary rounded-pill px-3 py-2">{{ rec.cantidad }}</span></td>
+                                        <td class="text-muted">{{ rec.unidad_medida }}</td>
+                                        <td class="text-muted small">{{ rec.fecha_actualizacion }}</td>
+                                    </tr>
+                                    {% endfor %}
+                                {% else %}
+                                    <tr>
+                                        <td colspan="4" class="text-center py-4 text-muted">
+                                            Aún no tienes recursos registrados en tu inventario.
+                                        </td>
+                                    </tr>
+                                {% endif %}
+                            </tbody>
+                        </table>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+{% endblock %}

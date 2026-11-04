@@ -1,0 +1,149 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>{% block title %}RedComunitaria{% endblock %}</title>
+    <!-- Bootstrap 5 -->
+    <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/css/bootstrap.min.css" rel="stylesheet">
+    <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/bootstrap-icons@1.10.5/font/bootstrap-icons.css">
+    
+    <!-- Nuestro CSS Global -->
+    <link rel="stylesheet" href="{{ url_for('static', filename='assets/css/style.css') }}">
+    
+    <style>
+        /* Efecto hover sutil para los enlaces del menú lateral */
+        .sidebar-link { transition: all 0.2s ease-in-out; border-radius: 8px; }
+        .sidebar-link:hover { background-color: #f8f9fa; transform: translateX(5px); color: #0d6efd !important; }
+    </style>
+    
+    {% block extra_css %}{% endblock %}
+</head>
+<body class="bg-light">
+
+    <!-- INTERCEPTOR DE MENSAJES FLASH (Solo Alertas Normales) -->
+    {% with messages = get_flashed_messages(with_categories=true) %}
+        {% if messages %}
+            <div class="container mt-3 position-absolute start-50 translate-middle-x" style="z-index: 1050; top: 10px;">
+                {% for category, message in messages %}
+                    <!-- Filtramos para que aquí no intente cargar el 'welcome' por si acaso -->
+                    {% if category != 'welcome' %}
+                        <div class="alert alert-{{ 'success' if category == 'success' else 'danger' }} alert-dismissible fade show shadow-sm" role="alert">
+                            {{ message }}
+                            <button type="button" class="btn-close" data-bs-dismiss="alert"></button>
+                        </div>
+                    {% endif %}
+                {% endfor %}
+            </div>
+        {% endif %}
+    {% endwith %}
+
+    <!-- TOPBAR -->
+    <div class="topbar d-flex justify-content-between align-items-center shadow-sm p-3 bg-white">
+        <div class="d-flex align-items-center">
+            <button class="btn btn-light border-0 me-3" data-bs-toggle="offcanvas" data-bs-target="#menuLateral">
+                <i class="bi bi-list fs-4"></i>
+            </button>
+            <a href="{{ url_for('home') }}" class="brand-text text-decoration-none fw-bold fs-5 text-primary">RedComunitaria</a>
+        </div>
+        <div class="d-flex align-items-center gap-3">
+            <!-- Nombre del usuario -->
+            <span class="text-muted d-none d-md-inline fw-semibold"><i class="bi bi-person-circle me-1"></i> {{ session.get('nombres', 'Usuario') }}</span>
+            <a href="{{ url_for('usuario.logout') }}" class="btn btn-outline-danger btn-sm">Cerrar Sesión</a>
+        </div>
+    </div>
+
+    <!-- SIDEBAR (Offcanvas) -->
+    <div class="offcanvas offcanvas-start" tabindex="-1" id="menuLateral" style="width: 280px;">
+        <div class="offcanvas-header border-bottom">
+            <h5 class="offcanvas-title text-primary fw-bold">Menú Principal</h5>
+            <button type="button" class="btn-close" data-bs-dismiss="offcanvas"></button>
+        </div>
+        <div class="offcanvas-body p-3 d-flex flex-column">
+            
+            <!-- ============================================== -->
+            <!-- MENÚ: ADMINISTRADOR                            -->
+            <!-- ============================================== -->
+            {% if session.get('rol') == 'ADMIN' %}
+                <div class="small text-muted fw-bold mb-2 mt-2 px-2">PRINCIPAL</div>
+                <a href="{{ url_for('dashboard_view') }}" class="sidebar-link d-block px-2 py-2 mb-1 text-decoration-none text-dark">
+                    <i class="bi bi-bar-chart-fill text-primary me-2"></i> Dashboard General
+                </a>
+
+                <div class="small text-muted fw-bold mb-2 mt-4 px-2">COMUNIDAD</div>
+                <a href="{{ url_for('usuario.admin_usuarios_view') }}" class="sidebar-link d-block px-2 py-2 mb-1 text-decoration-none text-dark">
+                    <i class="bi bi-people-fill text-secondary me-2"></i> Gestión Usuarios
+                </a>
+                <a href="{{ url_for('olla.admin_ollas_view') }}" class="sidebar-link d-block px-2 py-2 mb-1 text-decoration-none text-dark">
+                    <i class="bi bi-house-door-fill text-primary me-2"></i> Gestión de Ollas
+                </a>
+
+                <div class="small text-muted fw-bold mb-2 mt-4 px-2">LOGÍSTICA</div>
+                <a href="{{ url_for('solicitud.admin_solicitudes_view') }}" class="sidebar-link d-block px-2 py-2 mb-1 text-decoration-none text-dark">
+                    <i class="bi bi-check-circle-fill text-success me-2"></i> Solicitudes Pendientes
+                </a>
+                <a href="{{ url_for('donacion.admin_donaciones_view') }}" class="sidebar-link d-block px-2 py-2 mb-1 text-decoration-none text-dark">
+                    <i class="bi bi-box-seam-fill text-success me-2"></i> Gestión de Donaciones
+                </a>
+                <a href="{{ url_for('recurso.admin_recursos_view') }}" class="sidebar-link d-block px-2 py-2 mb-1 text-decoration-none text-dark">
+                    <i class="bi bi-box2-fill text-warning me-2"></i> Almacén Central
+                </a>
+            {% endif %}
+
+            <!-- ============================================== -->
+            <!-- MENÚ: DONADOR                                  -->
+            <!-- ============================================== -->
+            {% if session.get('rol') == 'DONADOR' %}
+                <div class="small text-muted fw-bold mb-2 mt-2 px-2">PRINCIPAL</div>
+                <a href="{{ url_for('dashboard_view') }}" class="sidebar-link d-block px-2 py-2 mb-1 text-decoration-none text-dark">
+                    <i class="bi bi-house-door-fill text-primary me-2"></i> Inicio
+                </a>
+                <a href="{{ url_for('donacion.mis_donaciones_view') }}" class="sidebar-link d-block px-2 py-2 mb-1 text-decoration-none text-dark">
+                    <i class="bi bi-gift-fill text-warning me-2"></i> Mis Donaciones
+                </a>
+            {% endif %}
+
+            <!-- ============================================== -->
+            <!-- MENÚ: LIDERESA                                 -->
+            <!-- ============================================== -->
+            {% if session.get('rol') == 'LIDERESA' %}
+                <div class="small text-muted fw-bold mb-2 mt-2 px-2">PRINCIPAL</div>
+                <a href="{{ url_for('dashboard_view') }}" class="sidebar-link d-block px-2 py-2 mb-1 text-decoration-none text-dark">
+                    <i class="bi bi-shop text-primary me-2"></i> Dashboard de mi Olla
+                </a>
+                
+                <div class="small text-muted fw-bold mb-2 mt-4 px-2">INVENTARIO Y NECESIDADES</div>
+                <a href="{{ url_for('recurso.gestion_recursos_view') }}" class="sidebar-link d-block px-2 py-2 mb-1 text-decoration-none text-dark">
+                    <i class="bi bi-box-seam-fill text-secondary me-2"></i> Gestión de Recursos
+                </a>
+                <a href="{{ url_for('solicitud.gestion_solicitudes_view') }}" class="sidebar-link d-block px-2 py-2 mb-1 text-decoration-none text-dark">
+                    <i class="bi bi-megaphone-fill text-danger me-2"></i> Mis Solicitudes
+                </a>
+            {% endif %}
+
+            <!-- FOOTER DEL SIDEBAR -->
+            <hr class="mt-auto">
+            <a href="{{ url_for('usuario.perfil_view') }}" class="sidebar-link d-block px-2 py-2 text-decoration-none text-dark">
+                <i class="bi bi-person-fill text-secondary me-2"></i> Mi Perfil
+            </a>
+        </div>
+    </div>
+
+    <!-- CONTENIDO DE CADA PÁGINA -->
+    <main class="container-fluid p-4">
+        {% block content %}
+        {% endblock %}
+    </main>
+
+    <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/js/bootstrap.bundle.min.js"></script>
+        <!-- Cierra automáticamente las alertas flash después de 2 segundos -->
+    <script>
+        document.querySelectorAll('.alert-dismissible').forEach(function (alerta) {
+            setTimeout(function () {
+                bootstrap.Alert.getOrCreateInstance(alerta).close();
+            }, 2000); // 4000 ms = 4 segundos
+        });
+    </script>
+    {% block extra_js %}{% endblock %}
+</body>
+</html>

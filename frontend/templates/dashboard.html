@@ -1,0 +1,19 @@
+{% extends "base.html" %}
+
+{% block title %}Dashboard - Red Comunitaria{% endblock %}
+
+{% block content %}
+<!-- CONTENIDO PRINCIPAL -->
+<div class="container-fluid p-0">
+    <h2 class="mb-4 fw-bold text-dark">Panel Principal</h2>
+    
+    <div class="card shadow-sm border-0 rounded-4">
+        <div class="card-body p-4">
+            <!-- Usamos los datos guardados directamente en la sesión de Flask -->
+            <h5 class="card-title">Bienvenido, {{ session.get('nombres') }}</h5>
+            <p class="text-muted">Este es el panel principal. Aquí colocaremos las gráficas o tablas según tu rol.</p>
+            <span class="badge bg-primary text-uppercase">Rol: {{ session.get('rol') }}</span>
+        </div>
+    </div>
+</div>
+{% endblock %}
