@@ -18,6 +18,7 @@
     </style>
     
     {% block extra_css %}{% endblock %}
+    {% include '_accessibility_head.html' %}
 </head>
 <body class="bg-light">
 
@@ -145,5 +146,6 @@
         });
     </script>
     {% block extra_js %}{% endblock %}
+    {% include '_accessibility.html' %}
 </body>
 </html>

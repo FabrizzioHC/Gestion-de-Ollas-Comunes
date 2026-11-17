@@ -152,3 +152,51 @@ frontend/
 database/       Scripts SQL (schema y seed)
 run.py          Punto de entrada de la aplicación
 ```
+
+## Inicio rapido con accesibilidad
+
+1. Extrae el ZIP completo en una carpeta nueva.
+2. Abre `.env` y configura DB_HOST, DB_PORT, DB_USER, DB_PASSWORD y DB_NAME
+   con los datos de tu MySQL. Si ya tienes una base con los datos del proyecto,
+   escribe su nombre en DB_NAME. El nombre debe coincidir exactamente.
+3. Enciende MySQL y haz doble clic en `INICIAR.bat`.
+
+El iniciador prepara un entorno virtual (venv; tambien reconoce .venv), instala
+las dependencias la primera vez, genera una clave local de sesion si falta,
+comprueba la conexion y la tabla Usuario, y abre http://127.0.0.1:5000 cuando la
+aplicacion responde. Python 3.9 o superior debe estar instalado. La primera
+instalacion necesita Internet. No necesitas activar PowerShell ni editar
+backend/config/database.py. Conserva abierta la ventana para usar el sistema;
+Ctrl+C lo detiene. Si el puerto 5000 esta ocupado, detiene la otra instancia.
+
+Si aun no existe la base, importa `database/ollas_comunes.sql` una sola vez
+con MySQL Workbench. Este es el archivo incluido en este ZIP; reemplaza las
+referencias antiguas a schema.sql y seed.sql de la guia original. El archivo
+INICIAR.bat no importa SQL, no elimina registros y no cambia contrasenas de MySQL.
+No reemplaces tu `.env` al actualizar una instalacion que ya esta configurada.
+
+### Panel de accesibilidad
+
+El boton azul inferior derecho aparece en las 15 paginas. Incluye texto al
+125 %, 150 % y 200 %; tres contrastes; cursor grande y extra grande; mascara
+de lectura; fuente y espaciado de lectura; interlineado; perfiles y restablecer.
+Las preferencias se guardan en este navegador para el mismo host y puerto.
+El panel admite teclado, Escape, retorno del foco y avisos para lectores de
+pantalla. La mascara respeta campos y controles que utilizan flechas. El texto
+se recalcula al cambiar el ancho de la ventana. El idioma disponible es espanol.
+
+Los archivos originales de backend, SQL, dependencias, estilos generales y
+run.py se conservan. En base.html y cinco paginas independientes se agregaron
+solo las inclusiones del panel. Sus archivos estan separados en los fragmentos
+_accessibility*.html y los recursos accessibility.css y accessibility.js.
+
+### Verificacion
+
+`python pruebas/accesibilidad/verificar_plantillas.py` comprueba 60 renderizados
+(15 paginas con cuatro estados de sesion) sin consultar MySQL.
+`node pruebas/accesibilidad/verificar_logica.cjs` comprueba la logica del panel
+con un DOM simulado. Node es opcional y solo se usa para estas pruebas; no es
+necesario para ejecutar el proyecto.
+
+La ejecucion visual en Windows y la lectura con NVDA deben comprobarse en tu
+equipo. No se presenta la simulacion como una certificacion de accesibilidad.
