@@ -8,7 +8,7 @@ def get_connection():
     try:
         connection = pymysql.connect(
             host=os.getenv("DB_HOST", "localhost"),
-            port=int(os.getenv("DB_PORT", "3306")),
+            port=int(os.getenv("DB_PORT", "3309")),
             user=os.getenv("DB_USER", "root"),
             password=os.getenv("DB_PASSWORD", ""),
             database=os.getenv("DB_NAME", "sistema_ollas_comunes_vs_2"),  # -- es bueno tambien cambiar el nombre aca --

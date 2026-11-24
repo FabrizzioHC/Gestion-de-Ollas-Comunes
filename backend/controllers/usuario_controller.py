@@ -1,10 +1,12 @@
-from flask import Blueprint, request, redirect, url_for, session, flash, render_template
+from flask import Blueprint, request, redirect, url_for, session, flash, render_template, make_response
 from backend.dao.usuario_dao import UsuarioDAO
 from backend.models.usuario import Usuario
 from backend.models.olla_comun import OllaComun
 from backend.dao.olla_dao import OllaDAO
 from werkzeug.security import check_password_hash
 from datetime import datetime
+from math import ceil
+from backend.security.login_crypto import clave_publica_pem, descifrar_password
 
 # Creamos el Blueprint para los usuarios. 
 # Esto nos permite registrar todas estas rutas en el app principal de forma ordenada.
@@ -13,28 +15,53 @@ usuario_bp = Blueprint('usuario', __name__)
 # ==========================================
 # FLUJO 1: INICIAR SESIÓN Y LOGOUT
 # ==========================================
+@usuario_bp.route('/login/clave-publica', methods=['GET'])
+def clave_publica_login():
+    respuesta = make_response(clave_publica_pem(), 200)
+    respuesta.headers['Content-Type'] = 'text/plain; charset=utf-8'
+    respuesta.headers['Cache-Control'] = 'no-store'
+    return respuesta
+
 @usuario_bp.route('/login', methods=['GET', 'POST'])
 def login():
     if request.method == 'POST':
-        email = request.form.get('email')
-        password = request.form.get('password')
+        email = (request.form.get('email') or '').strip()
+        # Solo se aceptan contraseñas cifradas desde el frontend.
+        # No aceptar password en claro evita el retroceso accidental a HTTP plaintext.
+        if not email or not request.form.get('encrypted_password'):
+            flash('Debes ingresar tu correo y contraseña cifrada.', 'danger')
+            return render_template('login.html'), 400
+        try:
+            password = descifrar_password(request.form.get('encrypted_password'))
+        except ValueError:
+            flash('No se pudo validar el inicio de sesión. Actualiza la página.', 'danger')
+            return render_template('login.html'), 400
+
+        if not email or not password:
+            flash('Debes ingresar tu correo y contraseña.', 'danger')
+            return render_template('login.html'), 400
         
         usuario = UsuarioDAO.obtener_por_email(email)
         
         if not usuario:
             flash('Correo o contraseña incorrectos.', 'danger') 
-            return render_template('login.html')
+            return render_template('login.html'), 401
 
         # 1. Verificar si el usuario está desactivado permanentemente por un admin
         if not usuario.activo:
             flash('Tu cuenta ha sido suspendida. Contacta al administrador.', 'danger')
-            return render_template('login.html')
+            return render_template('login.html'), 403
 
         # 2. Verificar el bloqueo TEMPORAL de 3 minutos
         if usuario.bloqueado_hasta:
             if usuario.bloqueado_hasta > datetime.now():
                 flash('Has superado los intentos permitidos. Intenta de nuevo en 3 minutos.', 'danger')
-                return render_template('login.html')
+                # Informar cuánto tiempo falta antes de permitir otro intento.
+                segundos_restantes = max(1, ceil((usuario.bloqueado_hasta - datetime.now()).total_seconds()))
+                respuesta = make_response(render_template('login.html'), 429)
+                respuesta.headers['Retry-After'] = str(segundos_restantes)
+                respuesta.headers['Cache-Control'] = 'no-store'
+                return respuesta
             else:
                 # Si el tiempo ya pasó, le reiniciamos los intentos para darle otra oportunidad
                 UsuarioDAO.reiniciar_intentos(usuario.id)
@@ -59,11 +86,15 @@ def login():
             
             if nuevos_intentos >= 3:
                 flash('Por seguridad, tu cuenta ha sido bloqueada durante 3 minutos.', 'danger')
+                respuesta = make_response(render_template('login.html'), 429)
+                respuesta.headers['Retry-After'] = '180'
+                respuesta.headers['Cache-Control'] = 'no-store'
+                return respuesta
             else:
                 intentos_restantes = 3 - nuevos_intentos
                 flash(f'Contraseña incorrecta. Te quedan {intentos_restantes} intento(s).', 'warning')
                 
-            return render_template('login.html')
+            return render_template('login.html'), 401
             
     return render_template('login.html')
 

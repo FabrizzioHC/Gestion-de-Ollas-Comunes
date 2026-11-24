@@ -204,20 +204,29 @@ class UsuarioDAO:
         return UsuarioDAO._existe("email", email, excluir_id)
 
     @classmethod
-    def registrar_intento_fallido(cls, usuario_id, intentos_actuales):
+    def registrar_intento_fallido(cls, usuario_id, intentos_actuales=None):
+        """Incrementa de forma atómica incluso si ZAP envía peticiones paralelas."""
         conexion = get_connection()
+        if not conexion:
+            raise RuntimeError('No disponible la base de datos de intentos')
         try:
             with conexion.cursor() as cursor:
-                nuevo_intento = intentos_actuales + 1
-                if nuevo_intento >= 3:
-                    # Agrega 3 minutos a la hora actual usando DATE_ADD
-                    sql = "UPDATE Usuario SET intentos_fallidos = %s, bloqueado_hasta = DATE_ADD(NOW(), INTERVAL 3 MINUTE) WHERE id = %s"
-                else:
-                    sql = "UPDATE Usuario SET intentos_fallidos = %s WHERE id = %s"
-                
-                cursor.execute(sql, (nuevo_intento, usuario_id))
+                # MySQL evalúa las asignaciones UPDATE de izquierda a derecha.
+                # bloqueado_hasta se actualiza primero usando el valor anterior + 1.
+                cursor.execute("""UPDATE Usuario
+                    SET bloqueado_hasta = CASE
+                      WHEN COALESCE(intentos_fallidos,0) + 1 >= 3
+                        THEN COALESCE(bloqueado_hasta, DATE_ADD(NOW(), INTERVAL 3 MINUTE))
+                      ELSE bloqueado_hasta END,
+                    intentos_fallidos = COALESCE(intentos_fallidos,0) + 1
+                    WHERE id = %s""", (usuario_id,))
+                cursor.execute('SELECT intentos_fallidos FROM Usuario WHERE id = %s', (usuario_id,))
+                fila = cursor.fetchone()
             conexion.commit()
-            return nuevo_intento
+            return int(fila['intentos_fallidos'])
+        except Exception:
+            conexion.rollback()
+            raise
         finally:
             conexion.close()
 

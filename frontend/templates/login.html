@@ -47,18 +47,20 @@
             {% endwith %}
 
             <!-- FORMULARIO CONECTADO AL BACKEND DE FLASK -->
-            <form action="{{ url_for('usuario.login') }}" method="POST">
+            <form action="{{ url_for('usuario.login') }}" method="POST" id="loginForm" data-public-key-url="{{ url_for('usuario.clave_publica_login') }}">
                 
                 <input type="email" class="form-control mb-3" name="email" placeholder="Correo electrónico" required>
                 <div class="form-floating mb-3">
-                    <input type="password" class="form-control" name="password" id="inputPassword" placeholder="Contraseña" required>
+                    <input type="password" class="form-control" id="inputPassword" autocomplete="current-password" placeholder="Contraseña" required>
                     <label for="inputPassword">Contraseña</label>
                     <button type="button" class="toggle-pass" data-target="inputPassword" aria-label="Mostrar u ocultar contraseña">
                         <i class="bi bi-eye"></i>
                     </button>
                 </div>
                 
-                <button type="submit" class="btn btn-primary-custom w-100">Iniciar Sesión</button>
+                <input type="hidden" name="encrypted_password" id="encryptedPassword">
+                <div id="loginCryptoError" class="text-danger small mb-2" role="alert" hidden></div>
+                <button type="submit" id="loginSubmit" class="btn btn-primary-custom w-100">Iniciar Sesión</button>
             </form>
 
             <div class="mt-4 small text-center">
@@ -83,6 +85,7 @@
         });
     });
     </script>
+    <script src="{{ url_for('static', filename='assets/js/login-encryption.js') }}"></script>
     {% include '_accessibility.html' %}
 </body>
 </html>
