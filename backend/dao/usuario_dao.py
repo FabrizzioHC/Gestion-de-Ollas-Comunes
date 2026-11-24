@@ -205,25 +205,75 @@ class UsuarioDAO:
 
     @classmethod
     def registrar_intento_fallido(cls, usuario_id, intentos_actuales=None):
-        """Incrementa de forma atómica incluso si ZAP envía peticiones paralelas."""
         conexion = get_connection()
         if not conexion:
-            raise RuntimeError('No disponible la base de datos de intentos')
+            raise RuntimeError("No disponible la base de datos")
+
         try:
+            # Garantiza una transacción activa antes del SELECT FOR UPDATE.
+            # Necesario para que los intentos simultáneos no pierdan incrementos.
+            conexion.begin()
             with conexion.cursor() as cursor:
-                # MySQL evalúa las asignaciones UPDATE de izquierda a derecha.
-                # bloqueado_hasta se actualiza primero usando el valor anterior + 1.
-                cursor.execute("""UPDATE Usuario
-                    SET bloqueado_hasta = CASE
-                      WHEN COALESCE(intentos_fallidos,0) + 1 >= 3
-                        THEN COALESCE(bloqueado_hasta, DATE_ADD(NOW(), INTERVAL 3 MINUTE))
-                      ELSE bloqueado_hasta END,
-                    intentos_fallidos = COALESCE(intentos_fallidos,0) + 1
-                    WHERE id = %s""", (usuario_id,))
-                cursor.execute('SELECT intentos_fallidos FROM Usuario WHERE id = %s', (usuario_id,))
+                # Bloquea la fila para evitar conflictos
+                # cuando llegan varias peticiones simultáneas.
+                cursor.execute("""
+                    SELECT COALESCE(intentos_fallidos, 0) AS intentos,
+                        GREATEST(
+                            COALESCE(
+                                TIMESTAMPDIFF(
+                                    SECOND, NOW(), bloqueado_hasta
+                                ), 0
+                            ), 0
+                        ) AS espera
+                    FROM Usuario
+                    WHERE id = %s
+                    FOR UPDATE
+                """, (usuario_id,))
+
                 fila = cursor.fetchone()
+                if not fila:
+                    raise ValueError("Usuario no encontrado")
+
+                intentos = int(fila["intentos"])
+                espera = int(fila["espera"])
+
+                # Si sigue bloqueado, no contar otro intento.
+                if espera > 0:
+                    conexion.commit()
+                    return intentos, espera
+
+                intentos += 1
+
+                # Duración progresiva de los bloqueos
+                if intentos >= 12:
+                    segundos = 86400   # 24 horas
+                elif intentos == 9:
+                    segundos = 3600    # 1 hora
+                elif intentos == 6:
+                    segundos = 900     # 15 minutos
+                elif intentos == 3:
+                    segundos = 180     # 3 minutos
+                else:
+                    segundos = 0
+
+                cursor.execute("""
+                    UPDATE Usuario
+                    SET intentos_fallidos = %s,
+                        bloqueado_hasta =
+                            CASE WHEN %s > 0
+                            THEN DATE_ADD(
+                                NOW(), INTERVAL %s SECOND
+                            )
+                            ELSE NULL END
+                    WHERE id = %s
+                """, (
+                    intentos, segundos,
+                    segundos, usuario_id
+                ))
+
             conexion.commit()
-            return int(fila['intentos_fallidos'])
+            return intentos, segundos
+
         except Exception:
             conexion.rollback()
             raise
@@ -233,12 +283,17 @@ class UsuarioDAO:
     @classmethod
     def reiniciar_intentos(cls, usuario_id):
         conexion = get_connection()
+        if not conexion:
+            raise RuntimeError("No disponible la base de datos")
         try:
             with conexion.cursor() as cursor:
-                # Limpiamos tanto los intentos como el tiempo de bloqueo
+                # Se reinicia únicamente tras un inicio de sesión correcto.
                 sql = "UPDATE Usuario SET intentos_fallidos = 0, bloqueado_hasta = NULL WHERE id = %s"
                 cursor.execute(sql, (usuario_id,))
             conexion.commit()
+        except Exception:
+            conexion.rollback()
+            raise
         finally:
             conexion.close()
 

@@ -24,88 +24,93 @@ def clave_publica_login():
 
 @usuario_bp.route('/login', methods=['GET', 'POST'])
 def login():
-    if request.method == 'POST':
-        email = (request.form.get('email') or '').strip()
-        # Solo se aceptan contraseñas cifradas desde el frontend.
-        # No aceptar password en claro evita el retroceso accidental a HTTP plaintext.
-        if not email or not request.form.get('encrypted_password'):
-            flash('Debes ingresar tu correo y contraseña cifrada.', 'danger')
-            return render_template('login.html'), 400
-        try:
-            password = descifrar_password(request.form.get('encrypted_password'))
-        except ValueError:
-            flash('No se pudo validar el inicio de sesión. Actualiza la página.', 'danger')
-            return render_template('login.html'), 400
+    if request.method == 'GET':
+        return render_template('login.html')
 
-        if not email or not password:
-            flash('Debes ingresar tu correo y contraseña.', 'danger')
-            return render_template('login.html'), 400
-        
-        usuario = UsuarioDAO.obtener_por_email(email)
-        
-        if not usuario:
-            flash('Correo o contraseña incorrectos.', 'danger') 
-            return render_template('login.html'), 401
+    email = (request.form.get('email') or '').strip().lower()
+    encrypted_password = request.form.get('encrypted_password')
 
-        # 1. Verificar si el usuario está desactivado permanentemente por un admin
-        if not usuario.activo:
-            flash('Tu cuenta ha sido suspendida. Contacta al administrador.', 'danger')
-            return render_template('login.html'), 403
+    # Mantener el cifrado RSA obligatorio en el formulario.
+    if not email or not encrypted_password:
+        flash('Debes ingresar tu correo y contraseña cifrada.', 'danger')
+        return render_template('login.html'), 400
 
-        # 2. Verificar el bloqueo TEMPORAL de 3 minutos
-        if usuario.bloqueado_hasta:
-            if usuario.bloqueado_hasta > datetime.now():
-                flash('Has superado los intentos permitidos. Intenta de nuevo en 3 minutos.', 'danger')
-                # Informar cuánto tiempo falta antes de permitir otro intento.
-                segundos_restantes = max(1, ceil((usuario.bloqueado_hasta - datetime.now()).total_seconds()))
-                respuesta = make_response(render_template('login.html'), 429)
-                respuesta.headers['Retry-After'] = str(segundos_restantes)
-                respuesta.headers['Cache-Control'] = 'no-store'
-                return respuesta
-            else:
-                # Si el tiempo ya pasó, le reiniciamos los intentos para darle otra oportunidad
-                UsuarioDAO.reiniciar_intentos(usuario.id)
-                usuario.intentos_fallidos = 0
+    try:
+        password = descifrar_password(encrypted_password)
+    except ValueError:
+        flash('No se pudo validar el inicio de sesión. Actualiza la página.', 'danger')
+        return render_template('login.html'), 400
 
-        # 3. Validar la contraseña
-        PREFIJO = "scrypt:32768:8:1$"
-        hash_completo = PREFIJO + usuario.password_hash
-        
-        if check_password_hash(hash_completo, password):
-            UsuarioDAO.reiniciar_intentos(usuario.id)
-            
-            session['usuario_id'] = usuario.id
-            session['rol'] = usuario.rol
-            session['nombres'] = usuario.nombres
+    if not password:
+        flash('Debes ingresar tu correo y contraseña.', 'danger')
+        return render_template('login.html'), 400
 
-            flash(f'¡Bienvenido, {usuario.nombres}!', 'welcome')
-            return redirect(url_for('home'))
-        else:
-            intentos_actuales = getattr(usuario, 'intentos_fallidos', 0)
-            nuevos_intentos = UsuarioDAO.registrar_intento_fallido(usuario.id, intentos_actuales)
-            
-            if nuevos_intentos >= 3:
-                flash('Por seguridad, tu cuenta ha sido bloqueada durante 3 minutos.', 'danger')
-                respuesta = make_response(render_template('login.html'), 429)
-                respuesta.headers['Retry-After'] = '180'
-                respuesta.headers['Cache-Control'] = 'no-store'
-                return respuesta
-            else:
-                intentos_restantes = 3 - nuevos_intentos
-                flash(f'Contraseña incorrecta. Te quedan {intentos_restantes} intento(s).', 'warning')
-                
-            return render_template('login.html'), 401
-            
-    return render_template('login.html')
+    usuario = UsuarioDAO.obtener_por_email(email)
+    if not usuario:
+        flash('Correo o contraseña incorrectos.', 'danger')
+        return render_template('login.html'), 401
+
+    if not usuario.activo:
+        flash('Tu cuenta ha sido suspendida. Contacta al administrador.', 'danger')
+        return render_template('login.html'), 403
+
+    # El contador NO se reinicia al acabar un bloqueo temporal.
+    # Solo se reinicia cuando el inicio de sesión es exitoso.
+    if usuario.bloqueado_hasta:
+        segundos_restantes = ceil(
+            (usuario.bloqueado_hasta - datetime.now()).total_seconds()
+        )
+        if segundos_restantes > 0:
+            minutos = ceil(segundos_restantes / 60)
+            flash(
+                f'Cuenta bloqueada temporalmente. Intenta nuevamente '
+                f'en {minutos} minuto(s).',
+                'danger'
+            )
+            respuesta = make_response(render_template('login.html'), 429)
+            respuesta.headers['Retry-After'] = str(segundos_restantes)
+            respuesta.headers['Cache-Control'] = 'no-store'
+            return respuesta
+
+    # Conservamos la validación de los hashes antiguos del proyecto.
+    PREFIJO = 'scrypt:32768:8:1$'
+    hash_completo = PREFIJO + usuario.password_hash
+
+    if check_password_hash(hash_completo, password):
+        UsuarioDAO.reiniciar_intentos(usuario.id)
+        session['usuario_id'] = usuario.id
+        session['rol'] = usuario.rol
+        session['nombres'] = usuario.nombres
+        flash(f'¡Bienvenido, {usuario.nombres}!', 'welcome')
+        return redirect(url_for('home'))
+
+    # IMPORTANTE: el DAO modificado debe devolver (intentos, segundos).
+    intentos, segundos = UsuarioDAO.registrar_intento_fallido(usuario.id)
+
+    if segundos > 0:
+        minutos = ceil(segundos / 60)
+        flash(
+            f'Por seguridad, tu cuenta ha sido bloqueada durante '
+            f'{minutos} minuto(s).',
+            'danger'
+        )
+        respuesta = make_response(render_template('login.html'), 429)
+        respuesta.headers['Retry-After'] = str(segundos)
+        respuesta.headers['Cache-Control'] = 'no-store'
+        return respuesta
+
+    intentos_restantes = 3 - (intentos % 3)
+    flash(
+        f'Contraseña incorrecta. Te quedan {intentos_restantes} intento(s).',
+        'warning'
+    )
+    return render_template('login.html'), 401
 
 @usuario_bp.route('/logout')
 def logout():
     session.clear() # Destruimos la sesión completa
     return redirect(url_for('home'))
 
-# ==========================================
-# FLUJO 2: REGISTRO (DONADOR O LIDERESA)
-# ==========================================
 # ==========================================
 # FLUJO 2: REGISTRO (DONADOR O LIDERESA)
 # ==========================================
